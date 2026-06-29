@@ -1,0 +1,926 @@
+{
+  "name": "Hama",
+  "prefix": "H",
+  "colors": [
+    {
+      "id": "H01",
+      "name": "White",
+      "symbol": "!",
+      "rgb": [
+        229,
+        236,
+        241
+      ]
+    },
+    {
+      "id": "H02",
+      "name": "Cream",
+      "symbol": "#",
+      "rgb": [
+        228,
+        228,
+        197
+      ]
+    },
+    {
+      "id": "H03",
+      "name": "Yellow",
+      "symbol": "$",
+      "rgb": [
+        233,
+        199,
+        4
+      ]
+    },
+    {
+      "id": "H04",
+      "name": "Orange",
+      "symbol": "%",
+      "rgb": [
+        209,
+        72,
+        3
+      ]
+    },
+    {
+      "id": "H05",
+      "name": "Red",
+      "symbol": "'",
+      "rgb": [
+        180,
+        6,
+        14
+      ]
+    },
+    {
+      "id": "H06",
+      "name": "Pink",
+      "symbol": "(",
+      "rgb": [
+        234,
+        138,
+        165
+      ]
+    },
+    {
+      "id": "H07",
+      "name": "Purple",
+      "symbol": ")",
+      "rgb": [
+        113,
+        34,
+        151
+      ]
+    },
+    {
+      "id": "H08",
+      "name": "Blue",
+      "symbol": "*",
+      "rgb": [
+        2,
+        57,
+        163
+      ]
+    },
+    {
+      "id": "H09",
+      "name": "Light Blue",
+      "symbol": "+",
+      "rgb": [
+        2,
+        91,
+        195
+      ]
+    },
+    {
+      "id": "H10",
+      "name": "Green",
+      "symbol": "-",
+      "rgb": [
+        2,
+        118,
+        67
+      ]
+    },
+    {
+      "id": "H11",
+      "name": "Light Green",
+      "symbol": ".",
+      "rgb": [
+        25,
+        205,
+        167
+      ]
+    },
+    {
+      "id": "H12",
+      "name": "Brown",
+      "symbol": "/",
+      "rgb": [
+        62,
+        39,
+        26
+      ]
+    },
+    {
+      "id": "H13",
+      "name": "Transparent Red",
+      "symbol": "0",
+      "rgb": [
+        192,
+        36,
+        53
+      ]
+    },
+    {
+      "id": "H14",
+      "name": "Transparent Yellow",
+      "symbol": "1",
+      "rgb": [
+        228,
+        170,
+        50
+      ]
+    },
+    {
+      "id": "H16",
+      "name": "Transparent Green",
+      "symbol": "2",
+      "rgb": [
+        55,
+        184,
+        118
+      ]
+    },
+    {
+      "id": "H17",
+      "name": "Grey",
+      "symbol": "3",
+      "rgb": [
+        131,
+        143,
+        152
+      ]
+    },
+    {
+      "id": "H18",
+      "name": "Black",
+      "symbol": "4",
+      "rgb": [
+        20,
+        19,
+        21
+      ]
+    },
+    {
+      "id": "H19",
+      "name": "Clear",
+      "symbol": "5",
+      "rgb": [
+        216,
+        210,
+        206
+      ]
+    },
+    {
+      "id": "H20",
+      "name": "Reddish Brown",
+      "symbol": "6",
+      "rgb": [
+        141,
+        42,
+        15
+      ]
+    },
+    {
+      "id": "H21",
+      "name": "Light Brown",
+      "symbol": "7",
+      "rgb": [
+        190,
+        108,
+        33
+      ]
+    },
+    {
+      "id": "H22",
+      "name": "Dark Red",
+      "symbol": "8",
+      "rgb": [
+        145,
+        2,
+        10
+      ]
+    },
+    {
+      "id": "H24",
+      "name": "Translucent Purple",
+      "symbol": "9",
+      "rgb": [
+        104,
+        62,
+        154
+      ]
+    },
+    {
+      "id": "H25",
+      "name": "Translucent Brown",
+      "symbol": ":",
+      "rgb": [
+        135,
+        89,
+        61
+      ]
+    },
+    {
+      "id": "H26",
+      "name": "Matt Rose",
+      "symbol": ";",
+      "rgb": [
+        232,
+        164,
+        152
+      ]
+    },
+    {
+      "id": "H27",
+      "name": "Beige",
+      "symbol": "=",
+      "rgb": [
+        220,
+        177,
+        142
+      ]
+    },
+    {
+      "id": "H28",
+      "name": "Dark Green",
+      "symbol": "?",
+      "rgb": [
+        30,
+        44,
+        28
+      ]
+    },
+    {
+      "id": "H29",
+      "name": "Claret",
+      "symbol": "@",
+      "rgb": [
+        191,
+        1,
+        66
+      ]
+    },
+    {
+      "id": "H30",
+      "name": "Burgundy",
+      "symbol": "A",
+      "rgb": [
+        78,
+        12,
+        27
+      ]
+    },
+    {
+      "id": "H31",
+      "name": "Turquoise",
+      "symbol": "B",
+      "rgb": [
+        72,
+        154,
+        185
+      ]
+    },
+    {
+      "id": "H32",
+      "name": "Neon Fuchsia",
+      "symbol": "C",
+      "rgb": [
+        255,
+        32,
+        141
+      ]
+    },
+    {
+      "id": "H33",
+      "name": "Cerise",
+      "symbol": "D",
+      "rgb": [
+        255,
+        57,
+        86
+      ]
+    },
+    {
+      "id": "H34",
+      "name": "Neon Yellow",
+      "symbol": "E",
+      "rgb": [
+        229,
+        239,
+        19
+      ]
+    },
+    {
+      "id": "H35",
+      "name": "Neon Red",
+      "symbol": "F",
+      "rgb": [
+        255,
+        40,
+        51
+      ]
+    },
+    {
+      "id": "H36",
+      "name": "Neon Blue",
+      "symbol": "G",
+      "rgb": [
+        35,
+        83,
+        176
+      ]
+    },
+    {
+      "id": "H37",
+      "name": "Neon Green",
+      "symbol": "H",
+      "rgb": [
+        6,
+        183,
+        60
+      ]
+    },
+    {
+      "id": "H38",
+      "name": "Neon Orange",
+      "symbol": "I",
+      "rgb": [
+        253,
+        134,
+        0
+      ]
+    },
+    {
+      "id": "H39",
+      "name": "Fluorescent Yellow",
+      "symbol": "J",
+      "rgb": [
+        241,
+        242,
+        28
+      ]
+    },
+    {
+      "id": "H40",
+      "name": "Fluorescent Orange",
+      "symbol": "K",
+      "rgb": [
+        254,
+        99,
+        11
+      ]
+    },
+    {
+      "id": "H41",
+      "name": "Fluorescent Blue",
+      "symbol": "L",
+      "rgb": [
+        38,
+        89,
+        178
+      ]
+    },
+    {
+      "id": "H42",
+      "name": "Fluorescent Green",
+      "symbol": "M",
+      "rgb": [
+        12,
+        189,
+        81
+      ]
+    },
+    {
+      "id": "H43",
+      "name": "Pastel Yellow",
+      "symbol": "N",
+      "rgb": [
+        231,
+        228,
+        90
+      ]
+    },
+    {
+      "id": "H44",
+      "name": "Pastel Red",
+      "symbol": "O",
+      "rgb": [
+        249,
+        97,
+        96
+      ]
+    },
+    {
+      "id": "H45",
+      "name": "Pastel Purple",
+      "symbol": "P",
+      "rgb": [
+        142,
+        105,
+        205
+      ]
+    },
+    {
+      "id": "H46",
+      "name": "Pastel Blue",
+      "symbol": "Q",
+      "rgb": [
+        81,
+        174,
+        228
+      ]
+    },
+    {
+      "id": "H47",
+      "name": "Pastel Green",
+      "symbol": "R",
+      "rgb": [
+        128,
+        223,
+        150
+      ]
+    },
+    {
+      "id": "H48",
+      "name": "Pastel Pink",
+      "symbol": "S",
+      "rgb": [
+        214,
+        122,
+        209
+      ]
+    },
+    {
+      "id": "H49",
+      "name": "Azure",
+      "symbol": "T",
+      "rgb": [
+        15,
+        172,
+        209
+      ]
+    },
+    {
+      "id": "H60",
+      "name": "Teddybear Brown",
+      "symbol": "U",
+      "rgb": [
+        240,
+        152,
+        30
+      ]
+    },
+    {
+      "id": "H70",
+      "name": "Light Grey",
+      "symbol": "V",
+      "rgb": [
+        165,
+        179,
+        192
+      ]
+    },
+    {
+      "id": "H71",
+      "name": "Dark Grey",
+      "symbol": "W",
+      "rgb": [
+        68,
+        80,
+        89
+      ]
+    },
+    {
+      "id": "H75",
+      "name": "Tan",
+      "symbol": "X",
+      "rgb": [
+        183,
+        140,
+        109
+      ]
+    },
+    {
+      "id": "H76",
+      "name": "Nougat",
+      "symbol": "Y",
+      "rgb": [
+        138,
+        89,
+        55
+      ]
+    },
+    {
+      "id": "H77",
+      "name": "Cloudy White",
+      "symbol": "Z",
+      "rgb": [
+        206,
+        209,
+        200
+      ]
+    },
+    {
+      "id": "H78",
+      "name": "Light Peach",
+      "symbol": "[",
+      "rgb": [
+        247,
+        193,
+        170
+      ]
+    },
+    {
+      "id": "H79",
+      "name": "Apricot",
+      "symbol": "]",
+      "rgb": [
+        248,
+        118,
+        51
+      ]
+    },
+    {
+      "id": "H82",
+      "name": "Plum",
+      "symbol": "^",
+      "rgb": [
+        145,
+        23,
+        90
+      ]
+    },
+    {
+      "id": "H83",
+      "name": "Petrol Blue",
+      "symbol": "_",
+      "rgb": [
+        3,
+        122,
+        159
+      ]
+    },
+    {
+      "id": "H84",
+      "name": "Olive Green",
+      "symbol": "`",
+      "rgb": [
+        104,
+        120,
+        54
+      ]
+    },
+    {
+      "id": "H95",
+      "name": "Pastel Rose",
+      "symbol": "a",
+      "rgb": [
+        221,
+        155,
+        163
+      ]
+    },
+    {
+      "id": "H96",
+      "name": "Pastel Lilac",
+      "symbol": "b",
+      "rgb": [
+        180,
+        145,
+        173
+      ]
+    },
+    {
+      "id": "H97",
+      "name": "Pastel Ice Blue",
+      "symbol": "c",
+      "rgb": [
+        138,
+        175,
+        194
+      ]
+    },
+    {
+      "id": "H98",
+      "name": "Pastel Mint",
+      "symbol": "d",
+      "rgb": [
+        148,
+        204,
+        164
+      ]
+    },
+    {
+      "id": "H15",
+      "name": "Transparent Blue",
+      "symbol": "e",
+      "rgb": [
+        72,
+        126,
+        213
+      ]
+    },
+    {
+      "id": "H55",
+      "name": "Green (Glow in the Dark)",
+      "symbol": "f",
+      "rgb": [
+        250,
+        248,
+        237
+      ]
+    },
+    {
+      "id": "H56",
+      "name": "Red (Glow in the Dark)",
+      "symbol": "g",
+      "rgb": [
+        237,
+        191,
+        159
+      ]
+    },
+    {
+      "id": "H57",
+      "name": "Blue (Glow in the Dark)",
+      "symbol": "h",
+      "rgb": [
+        196,
+        208,
+        227
+      ]
+    },
+    {
+      "id": "H61",
+      "name": "Gold",
+      "symbol": "i",
+      "rgb": [
+        217,
+        147,
+        80
+      ]
+    },
+    {
+      "id": "H62",
+      "name": "Silver",
+      "symbol": "j",
+      "rgb": [
+        72,
+        71,
+        74
+      ]
+    },
+    {
+      "id": "H63",
+      "name": "Bronze",
+      "symbol": "k",
+      "rgb": [
+        66,
+        49,
+        47
+      ]
+    },
+    {
+      "id": "H64",
+      "name": "Pearl",
+      "symbol": "l",
+      "rgb": [
+        239,
+        235,
+        228
+      ]
+    },
+    {
+      "id": "H72",
+      "name": "Translucent Pink",
+      "symbol": "m",
+      "rgb": [
+        240,
+        151,
+        176
+      ]
+    },
+    {
+      "id": "H73",
+      "name": "Translucent Aqua",
+      "symbol": "n",
+      "rgb": [
+        89,
+        174,
+        245
+      ]
+    },
+    {
+      "id": "H74",
+      "name": "Translucent Lilac",
+      "symbol": "o",
+      "rgb": [
+        91,
+        85,
+        189
+      ]
+    },
+    {
+      "id": "H101",
+      "name": "Eucalyptus",
+      "symbol": "p",
+      "rgb": [
+        169,
+        195,
+        155
+      ]
+    },
+    {
+      "id": "H102",
+      "name": "Forest Green",
+      "symbol": "q",
+      "rgb": [
+        53,
+        107,
+        45
+      ]
+    },
+    {
+      "id": "H103",
+      "name": "Light Yellow",
+      "symbol": "r",
+      "rgb": [
+        255,
+        230,
+        96
+      ]
+    },
+    {
+      "id": "H104",
+      "name": "Lime",
+      "symbol": "s",
+      "rgb": [
+        188,
+        209,
+        34
+      ]
+    },
+    {
+      "id": "H105",
+      "name": "Light Apricot",
+      "symbol": "t",
+      "rgb": [
+        255,
+        172,
+        120
+      ]
+    },
+    {
+      "id": "H106",
+      "name": "Light Lavender",
+      "symbol": "u",
+      "rgb": [
+        204,
+        197,
+        237
+      ]
+    },
+    {
+      "id": "H107",
+      "name": "Lavender",
+      "symbol": "v",
+      "rgb": [
+        106,
+        135,
+        193
+      ]
+    },
+    {
+      "id": "H108",
+      "name": "Aubergine",
+      "symbol": "w",
+      "rgb": [
+        42,
+        37,
+        54
+      ]
+    },
+    {
+      "id": "H109",
+      "name": "Cloudy Grey",
+      "symbol": "x",
+      "rgb": [
+        138,
+        132,
+        127
+      ]
+    },
+    {
+      "id": "H110",
+      "name": "Matcha",
+      "symbol": "y",
+      "rgb": [
+        131,
+        137,
+        86
+      ]
+    },
+    {
+      "id": "H111",
+      "name": "Dark Blush",
+      "symbol": "z",
+      "rgb": [
+        131,
+        88,
+        84
+      ]
+    },
+    {
+      "id": "H112",
+      "name": "Blush",
+      "symbol": "{",
+      "rgb": [
+        173,
+        138,
+        130
+      ]
+    },
+    {
+      "id": "H113",
+      "name": "Aqua",
+      "symbol": "|",
+      "rgb": [
+        95,
+        136,
+        123
+      ]
+    },
+    {
+      "id": "H114",
+      "name": "Cherry Red",
+      "symbol": "}",
+      "rgb": [
+        154,
+        44,
+        49
+      ]
+    },
+    {
+      "id": "H115",
+      "name": "Bright Green",
+      "symbol": "~",
+      "rgb": [
+        110,
+        151,
+        95
+      ]
+    },
+    {
+      "id": "H116",
+      "name": "Midnight Blue",
+      "symbol": "¡",
+      "rgb": [
+        34,
+        40,
+        56
+      ]
+    },
+    {
+      "id": "H117",
+      "name": "Taupe Grey",
+      "symbol": "¢",
+      "rgb": [
+        119,
+        113,
+        105
+      ]
+    },
+    {
+      "id": "H118",
+      "name": "Maroon Red",
+      "symbol": "£",
+      "rgb": [
+        97,
+        41,
+        50
+      ]
+    },
+    {
+      "id": "H119",
+      "name": "Sky Blue",
+      "symbol": "¤",
+      "rgb": [
+        65,
+        103,
+        180
+      ]
+    }
+  ]
+}

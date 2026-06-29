@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ghcr.io/loveelysia000/perler-beads:latest
+    container_name: perler-beads
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: perler-beads-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 60 --cleanup --label-enable

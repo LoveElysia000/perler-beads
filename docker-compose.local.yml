@@ -1,0 +1,8 @@
+services:
+  app:
+    build: .
+    image: perler-beads:local
+    container_name: perler-beads-local
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

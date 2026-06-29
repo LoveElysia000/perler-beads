@@ -1,0 +1,38 @@
+/* Custom styles beyond Tailwind */
+
+#dropZone.drag-over {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+#patternCanvas {
+  image-rendering: pixelated;
+}
+
+#countsList li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+#countsList li:hover { background: #f8fafc; }
+#countsList li.highlighted { background: #eef2ff; }
+#countsList li .swatch {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+#countsList li .name { flex: 1; font-size: 13px; font-weight: 500; }
+#countsList li .count { font-size: 12px; color: #64748b; font-variant-numeric: tabular-nums; }
+
+.hidden { display: none !important; }
+
+@media print {
+  body { background: #fff; }
+  header, #leftPanel, #rightPanel { display: none; }
+  #centerPanel { flex: 1; overflow: visible; }
+}
