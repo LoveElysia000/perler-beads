@@ -89,6 +89,6 @@ docker logs -f perler-beads-watchtower
 
 ## 注意事项
 
-- `docker-compose.yml` 是服务器部署用，使用 GHCR 镜像并包含 Watchtower。
+- `docker-compose.yml` 是服务器部署用，使用 GHCR 镜像并包含 Watchtower，容器时区设置为 `Asia/Shanghai`。
 - `docker-compose.local.yml` 是本地/源码构建用。
 - 如果绑定域名，建议用 Nginx 或 Caddy 反向代理到 `127.0.0.1:8000`，并开启 HTTPS。

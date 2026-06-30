@@ -74,6 +74,7 @@ watchtower:
   container_name: perler-beads-watchtower
   restart: unless-stopped
   environment:
+    - TZ=Asia/Shanghai
     - DOCKER_API_VERSION=1.40
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
