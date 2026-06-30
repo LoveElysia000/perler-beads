@@ -40,7 +40,7 @@ function handleWorkerMessage(e) {
     $('exportSection').classList.remove('hidden');
     $('countsSection').classList.remove('hidden');
     $('generateBtn').disabled = false;
-    $('generateBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>重新生成';
+    $('generateBtn').innerHTML = '<span class="material-symbols-outlined">replay</span>重新生成';
   } else if (type === 'recommendation') {
     showBrandRecommendation(payload);
   }
@@ -249,14 +249,14 @@ $('generateBtn').addEventListener('click', () => { if (currentImage) runMatch();
 
 $('viewColor').addEventListener('click', () => {
   showCodes = false;
-  $('viewColor').className = 'px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-indigo-500 text-white';
-  $('viewCode').className = 'px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-white text-slate-500 border border-slate-200 hover:border-slate-300';
+  $('viewColor').className = 'rounded-xl bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-on-primary transition';
+  $('viewCode').className = 'rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary transition hover:bg-surface-container-high';
   renderFromGrid();
 });
 $('viewCode').addEventListener('click', () => {
   showCodes = true;
-  $('viewCode').className = 'px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-indigo-500 text-white';
-  $('viewColor').className = 'px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-white text-slate-500 border border-slate-200 hover:border-slate-300';
+  $('viewCode').className = 'rounded-xl bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-on-primary transition';
+  $('viewColor').className = 'rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary transition hover:bg-surface-container-high';
   renderFromGrid();
 });
 

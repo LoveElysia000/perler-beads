@@ -1,38 +1,75 @@
 /* Custom styles beyond Tailwind */
 
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 #dropZone.drag-over {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #3525cd;
+  background: #e5eeff;
 }
 
 #patternCanvas {
   image-rendering: pixelated;
 }
 
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.active-tool {
+  background-color: #3525cd !important;
+  color: #ffffff !important;
+}
+
 #countsList li {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 9px 10px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 150ms ease;
+  transition: background 150ms ease, transform 150ms ease;
 }
-#countsList li:hover { background: #f8fafc; }
-#countsList li.highlighted { background: #eef2ff; }
+#countsList li:hover {
+  background: #eff4ff;
+  transform: translateX(2px);
+}
+#countsList li.highlighted { background: #dce9ff; }
 #countsList li .swatch {
-  width: 18px; height: 18px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 1px solid #c7c4d8;
   flex-shrink: 0;
+  box-shadow: inset 0 -1px 2px rgba(0,0,0,0.08);
 }
-#countsList li .name { flex: 1; font-size: 13px; font-weight: 500; }
-#countsList li .count { font-size: 12px; color: #64748b; font-variant-numeric: tabular-nums; }
+#countsList li .name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b1c30;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#countsList li .count {
+  font-size: 12px;
+  color: #565e74;
+  font-variant-numeric: tabular-nums;
+}
 
 .hidden { display: none !important; }
 
 @media print {
   body { background: #fff; }
-  header, #leftPanel, #rightPanel { display: none; }
-  #centerPanel { flex: 1; overflow: visible; }
+  header, #toolRail, #inspectorPanel { display: none; }
+  #centerPanel { flex: 1; overflow: visible; padding: 0; }
 }

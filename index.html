@@ -3,172 +3,263 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>拼豆图纸生成器</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>PixelBead Workbench</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          colors: {
+            background: '#f8f9ff',
+            surface: '#f8f9ff',
+            'surface-dim': '#cbdbf5',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#eff4ff',
+            'surface-container': '#e5eeff',
+            'surface-container-high': '#dce9ff',
+            'surface-container-highest': '#d3e4fe',
+            primary: '#3525cd',
+            'primary-container': '#4f46e5',
+            'primary-fixed-dim': '#c3c0ff',
+            secondary: '#565e74',
+            outline: '#777587',
+            'outline-variant': '#c7c4d8',
+            'on-surface': '#0b1c30',
+            'on-surface-variant': '#464555',
+            'on-primary': '#ffffff',
+            'on-primary-container': '#dad7ff',
+          },
+          spacing: {
+            'margin-desktop': '32px',
+            'margin-mobile': '16px',
+            'panel-width': '320px',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          fontSize: {
+            'label-sm': ['13px', { lineHeight: '1', letterSpacing: '0.05em', fontWeight: '500' }],
+            'title-md': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+            'display-lg': ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
+          },
         }
       }
     }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="h-full bg-slate-50 text-slate-800 font-sans antialiased">
-
-  <header class="sticky top-0 z-10 flex items-center justify-between h-14 px-6 bg-white border-b border-slate-200">
-    <div class="flex items-center gap-2.5">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#6366f1"/>
-        <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#818cf8"/>
-        <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#a5b4fc"/>
-        <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#c7d2fe"/>
-      </svg>
-      <h1 class="text-base font-semibold">拼豆图纸生成器</h1>
+<body class="h-full bg-background text-on-surface font-sans antialiased overflow-hidden">
+  <header class="h-16 px-8 bg-surface border-b border-outline-variant flex items-center justify-between relative z-50">
+    <div class="flex items-center gap-8 min-w-0">
+      <div class="flex items-baseline gap-3 min-w-0">
+        <span class="text-[30px] md:text-[36px] leading-none font-extrabold tracking-[-0.04em] text-primary">PixelBead</span>
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Workbench</span>
+      </div>
+      <nav class="hidden lg:flex items-center gap-6 text-sm text-secondary">
+        <span class="hover:text-primary transition-colors cursor-default">Gallery</span>
+        <span class="hover:text-primary transition-colors cursor-default">Tutorial</span>
+        <span class="hover:text-primary transition-colors cursor-default">About</span>
+      </nav>
     </div>
-    <div class="flex items-center gap-3">
-      <span id="brandRecommend" class="hidden text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-medium"></span>
-      <div class="flex items-center gap-2">
-        <label for="brandSelect" class="text-sm text-slate-500">品牌</label>
-        <select id="brandSelect" class="text-sm border border-slate-200 rounded-md px-3 py-1.5 bg-white text-slate-700 cursor-pointer hover:border-indigo-400 transition duration-150 appearance-none pr-8 bg-no-repeat" style="background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C/polyline%3E%3C/svg%3E');background-position:right 8px center;background-size:16px">
+
+    <div class="flex items-center gap-4 shrink-0">
+      <span id="brandRecommend" class="hidden max-w-[360px] truncate rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-primary"></span>
+      <div class="hidden sm:flex flex-col items-end">
+        <span class="text-title-md font-semibold text-on-surface">拼豆图纸</span>
+        <span class="text-[11px] uppercase tracking-widest text-secondary">Image to Bead</span>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-secondary">
+        品牌
+        <select id="brandSelect" class="rounded-lg border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface focus:border-primary focus:ring-primary">
           <option value="hama">Hama</option>
           <option value="perler">Perler</option>
           <option value="artkal_c">Artkal C</option>
         </select>
-      </div>
+      </label>
     </div>
   </header>
 
-  <main class="flex h-[calc(100vh-56px)] min-w-0 max-w-[1440px] mx-auto overflow-hidden">
-    <aside id="leftPanel" class="w-[300px] shrink-0 p-3 flex flex-col gap-2 overflow-y-auto border-r border-slate-200">
-      <div class="shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-4 pt-3 pb-0">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">上传图片</div>
-        </div>
-        <div id="dropZone" class="flex items-center gap-3 p-3 mt-2 mx-4 mb-3 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer transition duration-150 hover:border-indigo-400 hover:bg-indigo-50/50">
-          <svg class="shrink-0" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <div class="min-w-0 flex-1">
-            <p class="text-sm text-slate-500 leading-5">拖拽、粘贴或选择图片</p>
-            <p class="text-[11px] text-slate-400 leading-4">JPG · PNG · WEBP</p>
-          </div>
-          <button id="fileBtn" class="shrink-0 px-3 py-1.5 text-sm text-indigo-500 border border-slate-200 rounded-md hover:bg-indigo-50 hover:border-indigo-400 transition duration-150">选择</button>
-        </div>
-        <input type="file" id="fileInput" accept="image/*" class="absolute opacity-0 pointer-events-none w-0 h-0">
+  <div class="flex h-[calc(100vh-64px)] min-w-0 overflow-hidden">
+    <aside id="toolRail" class="fixed left-6 top-24 bottom-8 z-40 hidden w-20 flex-col gap-4 xl:flex">
+      <div class="rounded-2xl border border-outline-variant bg-surface shadow-sm flex flex-col items-center gap-4 py-4">
+        <button class="active-tool flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-on-primary" title="画笔" type="button">
+          <span class="material-symbols-outlined">brush</span>
+        </button>
+        <button class="flex h-12 w-12 items-center justify-center rounded-xl text-secondary transition-colors hover:bg-surface-container-high" title="橡皮" type="button">
+          <span class="material-symbols-outlined">ink_eraser</span>
+        </button>
+        <button class="flex h-12 w-12 items-center justify-center rounded-xl text-secondary transition-colors hover:bg-surface-container-high" title="填充" type="button">
+          <span class="material-symbols-outlined">format_color_fill</span>
+        </button>
+        <div class="h-px w-8 bg-outline-variant"></div>
+        <button class="flex h-12 w-12 items-center justify-center rounded-xl text-secondary transition-colors hover:bg-surface-container-high" title="吸管" type="button">
+          <span class="material-symbols-outlined">colorize</span>
+        </button>
+        <button class="flex h-12 w-12 items-center justify-center rounded-xl text-secondary transition-colors hover:bg-surface-container-high" title="移动" type="button">
+          <span class="material-symbols-outlined">pan_tool</span>
+        </button>
       </div>
 
-      <div class="shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 p-3">
-        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">设置</div>
-        <div class="mb-2">
-          <label class="block text-sm font-medium text-slate-700 mb-1">网格尺寸</label>
-          <div class="flex items-center gap-2 mb-1.5">
-            <input type="number" id="gridW" value="58" min="10" max="500" class="w-20 px-2.5 py-1.5 text-sm text-center border border-slate-200 rounded-md focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition">
-            <span class="text-slate-400">×</span>
-            <input type="number" id="gridH" value="58" min="10" max="500" class="w-20 px-2.5 py-1.5 text-sm text-center border border-slate-200 rounded-md focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition">
-          </div>
-          <div data-testid="size-presets" class="flex flex-wrap gap-1.5">
-            <button data-w="29" data-h="29" class="px-2.5 py-1 text-xs border border-slate-200 rounded-md text-slate-500 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition">29×29</button>
-            <button data-w="58" data-h="58" class="px-2.5 py-1 text-xs border border-slate-200 rounded-md text-slate-500 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition">58×58</button>
-            <button data-w="87" data-h="87" class="px-2.5 py-1 text-xs border border-slate-200 rounded-md text-slate-500 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition">87×87</button>
-            <button data-w="116" data-h="116" class="px-2.5 py-1 text-xs border border-slate-200 rounded-md text-slate-500 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition">116×116</button>
-          </div>
-        </div>
-        <div class="mb-2">
-          <label class="block text-sm font-medium text-slate-700 mb-1">长宽比</label>
-          <select id="aspectMode" class="w-full text-sm border border-slate-200 rounded-md px-3 py-1.5 bg-white text-slate-700 cursor-pointer hover:border-indigo-400 transition appearance-none pr-8 bg-no-repeat" style="background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C/polyline%3E%3C/svg%3E');background-position:right 8px center;background-size:16px">
-            <option value="fit">留白居中</option>
-            <option value="fill">拉伸填满</option>
-            <option value="crop">裁切适配</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" id="skipTransparent" checked class="w-4 h-4 rounded accent-indigo-500">
-            <span class="text-slate-700">透明区域自动跳过</span>
-          </label>
-        </div>
-        <div class="mb-2">
-          <label class="flex items-center gap-2 text-sm cursor-pointer mb-2">
-            <input type="checkbox" id="enableSkipColor" class="w-4 h-4 rounded accent-indigo-500">
-            <span class="text-slate-700">指定跳过色</span>
-          </label>
-          <div class="flex items-center gap-2">
-            <input type="color" id="skipColorPicker" value="#ffffff" disabled class="w-7 h-7 border border-slate-200 rounded-md cursor-pointer p-0.5">
-            <span id="skipColorHex" class="text-sm text-slate-500">#ffffff</span>
-          </div>
-        </div>
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="text-sm font-medium text-slate-700">保真度</label>
-            <span id="fidelityLabel" class="text-xs text-slate-500">平衡</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] text-slate-400">省钱</span>
-            <input type="range" id="fidelity" min="3" max="100" value="60" class="flex-1 h-1.5 bg-slate-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-sm">
-            <span class="text-[11px] text-slate-400">还原</span>
-          </div>
-        </div>
+      <div class="custom-scrollbar flex-1 overflow-y-auto rounded-2xl border border-outline-variant bg-surface py-4 shadow-sm flex flex-col items-center gap-3">
+        <span class="text-[10px] font-bold text-outline">COLORS</span>
+        <span class="h-8 w-8 rounded-full bg-[#f5a8c8] ring-2 ring-primary ring-offset-2" title="Pink"></span>
+        <span class="h-8 w-8 rounded-full bg-[#7a4a78]" title="Mauve"></span>
+        <span class="h-8 w-8 rounded-full bg-[#111827]" title="Black"></span>
+        <span class="h-8 w-8 rounded-full bg-[#4b5563]" title="Grey"></span>
+        <span class="h-8 w-8 rounded-full bg-[#8b5cf6]" title="Purple"></span>
+        <span class="h-8 w-8 rounded-full border border-outline-variant bg-white" title="White"></span>
+        <span class="h-8 w-8 rounded-full bg-[#ffd0bf]" title="Skin"></span>
+        <span class="material-symbols-outlined flex h-8 w-8 items-center justify-center rounded-full text-[20px] text-secondary">add</span>
       </div>
-
-      <button id="generateBtn" disabled class="shrink-0 flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-indigo-500 rounded-xl shadow-sm hover:bg-indigo-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition duration-150">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        生成图纸
-      </button>
     </aside>
 
-    <section id="centerPanel" class="flex-1 min-w-0 flex items-center justify-center overflow-auto p-6">
-      <div id="previewEmpty" class="flex flex-col items-center gap-4 text-slate-400">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-        </svg>
-        <p class="text-sm">上传图片后开始生成</p>
-      </div>
-      <div id="previewArea" class="hidden w-full h-full flex flex-col">
-        <div class="flex items-center gap-1.5 mb-3 p-1 bg-white border border-slate-200 rounded-lg">
-          <button id="viewColor" class="px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-indigo-500 text-white">彩色</button>
-          <button id="viewCode" class="px-3.5 py-1.5 text-xs font-medium rounded-md transition bg-white text-slate-500 border border-slate-200 hover:border-slate-300">编号</button>
-          <span class="w-px h-5 bg-slate-200 mx-1"></span>
-          <button id="zoomOutBtn" class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" title="缩小">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-          <button id="zoomInBtn" class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" title="放大">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
+    <main class="flex min-w-0 flex-1 overflow-hidden">
+      <section id="centerPanel" class="relative flex min-w-0 flex-1 items-center justify-center overflow-auto bg-surface-dim p-6 xl:pl-32">
+        <div id="previewEmpty" class="flex max-w-lg flex-col items-center gap-5 rounded-3xl border border-white/70 bg-surface/70 px-10 py-12 text-center shadow-xl backdrop-blur">
+          <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface-container-lowest text-primary shadow-sm">
+            <span class="material-symbols-outlined text-[44px]">image</span>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold tracking-tight text-on-surface">上传图片后开始生成</h2>
+            <p class="mt-2 text-sm leading-6 text-secondary">在右侧上传图片，选择网格和品牌色表，然后生成可导出的拼豆图纸。</p>
+          </div>
         </div>
-        <div class="flex-1 overflow-auto flex items-start justify-center" id="previewContainer">
-          <canvas id="patternCanvas"></canvas>
-        </div>
-      </div>
-    </section>
 
-    <aside id="rightPanel" class="w-[260px] shrink-0 p-4 flex flex-col gap-3 overflow-y-auto border-l border-slate-200">
-      <div id="countsSection" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">豆子清单</div>
-          <span id="colorStats" class="text-xs text-slate-400"></span>
+        <div id="previewArea" class="hidden flex h-full w-full min-w-0 flex-col gap-4">
+          <div class="mx-auto flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-outline-variant bg-surface p-2 shadow-sm">
+            <button id="viewColor" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-on-primary transition" type="button">彩色</button>
+            <button id="viewCode" class="rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary transition hover:bg-surface-container-high" type="button">编号</button>
+            <span class="mx-1 h-6 w-px bg-outline-variant"></span>
+            <button id="zoomOutBtn" class="flex h-9 w-9 items-center justify-center rounded-xl text-secondary transition hover:bg-surface-container-high" title="缩小" type="button">
+              <span class="material-symbols-outlined text-[20px]">zoom_out</span>
+            </button>
+            <button id="zoomInBtn" class="flex h-9 w-9 items-center justify-center rounded-xl text-secondary transition hover:bg-surface-container-high" title="放大" type="button">
+              <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+            </button>
+          </div>
+
+          <div class="flex min-h-0 flex-1 items-center justify-center overflow-auto">
+            <div class="relative rounded-sm bg-white p-4 shadow-2xl">
+              <div id="previewContainer" class="flex max-h-[calc(100vh-190px)] min-h-[360px] min-w-[360px] items-start justify-center overflow-auto rounded-sm border border-outline-variant bg-surface-container-lowest p-2">
+                <canvas id="patternCanvas"></canvas>
+              </div>
+              <div class="absolute -bottom-9 left-0 flex gap-4 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider text-secondary">
+                <span>Preview</span>
+                <span>Board: 29×29</span>
+                <span>PixelBead</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <ul id="countsList" class="space-y-0.5 max-h-[340px] overflow-y-auto"></ul>
-      </div>
-      <div id="exportSection" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">导出</div>
-        <button id="downloadPNGBtn" class="flex items-center gap-2 w-full px-3.5 py-2.5 mb-2 text-sm text-slate-700 border border-slate-200 rounded-lg hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition duration-150">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下载 PNG
-        </button>
-        <button id="downloadCSVBtn" class="flex items-center gap-2 w-full px-3.5 py-2.5 mb-2 text-sm text-slate-700 border border-slate-200 rounded-lg hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition duration-150">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>购物清单 CSV
-        </button>
-        <button id="printBtn" class="flex items-center gap-2 w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-200 rounded-lg hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 transition duration-150">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 12H4a2 2 0 00-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4a2 2 0 00-2-2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>打印图纸
-        </button>
-      </div>
-    </aside>
-  </main>
+      </section>
+
+      <aside id="inspectorPanel" class="custom-scrollbar w-[320px] shrink-0 overflow-y-auto border-l border-outline-variant bg-surface">
+        <div class="flex flex-col gap-7 p-6">
+          <section>
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-title-md font-bold text-on-surface">Image to Bead</h3>
+              <span class="material-symbols-outlined text-[20px] text-secondary">help_outline</span>
+            </div>
+            <div id="dropZone" class="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest p-7 text-center transition-colors hover:bg-surface-container">
+              <span class="material-symbols-outlined text-[34px] text-primary transition-transform group-hover:scale-110">cloud_upload</span>
+              <div>
+                <p class="text-label-sm font-semibold text-secondary">拖拽、点击或粘贴图片</p>
+                <p class="mt-1 text-[11px] text-secondary/70">JPG · PNG · WEBP</p>
+              </div>
+              <button id="fileBtn" class="rounded-lg border border-outline-variant bg-surface px-4 py-2 text-xs font-bold text-primary transition hover:bg-surface-container-high" type="button">选择文件</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" class="absolute h-0 w-0 opacity-0 pointer-events-none">
+          </section>
+
+          <section class="flex flex-col gap-6">
+            <div>
+              <label class="mb-3 block text-label-sm font-bold text-on-surface-variant">网格尺寸</label>
+              <div class="mb-3 flex items-center gap-2">
+                <input id="gridW" class="w-full rounded-lg border-outline-variant bg-surface-container-lowest p-2 text-center text-sm focus:border-primary focus:ring-primary" type="number" value="58" min="10" max="500">
+                <span class="text-secondary">×</span>
+                <input id="gridH" class="w-full rounded-lg border-outline-variant bg-surface-container-lowest p-2 text-center text-sm focus:border-primary focus:ring-primary" type="number" value="58" min="10" max="500">
+              </div>
+              <div data-testid="size-presets" class="flex flex-wrap gap-2">
+                <button data-w="29" data-h="29" class="rounded border border-outline-variant px-3 py-1 text-[11px] text-secondary transition hover:bg-surface-container-high" type="button">29×29</button>
+                <button data-w="58" data-h="58" class="rounded bg-primary-container px-3 py-1 text-[11px] text-on-primary-container" type="button">58×58</button>
+                <button data-w="87" data-h="87" class="rounded border border-outline-variant px-3 py-1 text-[11px] text-secondary transition hover:bg-surface-container-high" type="button">87×87</button>
+                <button data-w="116" data-h="116" class="rounded border border-outline-variant px-3 py-1 text-[11px] text-secondary transition hover:bg-surface-container-high" type="button">116×116</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="mb-3 block text-label-sm font-bold text-on-surface-variant">长宽比</label>
+              <select id="aspectMode" class="w-full rounded-lg border-outline-variant bg-surface-container-lowest p-3 text-sm font-medium focus:border-primary focus:ring-primary">
+                <option value="fit">留白居中</option>
+                <option value="fill">拉伸填充</option>
+                <option value="crop">裁剪适配</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <label class="flex cursor-pointer items-center gap-3 text-sm text-on-surface-variant">
+                <input id="skipTransparent" checked class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox">
+                <span>透明区域自动跳过</span>
+              </label>
+              <label class="flex cursor-pointer items-center gap-3 text-sm text-on-surface-variant">
+                <input id="enableSkipColor" class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox">
+                <span>指定跳过色</span>
+                <input type="color" id="skipColorPicker" value="#ffffff" disabled class="ml-auto h-7 w-7 cursor-pointer rounded border border-outline-variant bg-white p-0.5">
+                <span id="skipColorHex" class="w-[54px] text-[11px] text-secondary">#ffffff</span>
+              </label>
+            </div>
+
+            <div>
+              <div class="mb-2 flex justify-between">
+                <label class="text-label-sm font-bold text-on-surface-variant">保真度</label>
+                <span id="fidelityLabel" class="text-[11px] text-secondary">平衡</span>
+              </div>
+              <input id="fidelity" class="h-1 w-full cursor-pointer appearance-none rounded-lg bg-surface-container-highest accent-primary" type="range" min="3" max="100" value="60">
+              <div class="mt-1 flex justify-between">
+                <span class="text-[10px] text-outline">省钱</span>
+                <span class="text-[10px] text-outline">还原</span>
+              </div>
+            </div>
+
+            <button id="generateBtn" disabled class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-label-sm font-bold text-on-primary shadow-md transition-all hover:shadow-lg active:scale-95 disabled:bg-outline-variant disabled:text-secondary disabled:shadow-none" type="button">
+              <span class="material-symbols-outlined">play_arrow</span>
+              生成图纸
+            </button>
+          </section>
+
+          <div class="h-px bg-outline-variant"></div>
+
+          <section id="countsSection" class="hidden">
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-title-md font-bold text-on-surface">豆子清单</h3>
+              <span id="colorStats" class="text-[11px] font-semibold uppercase tracking-wider text-secondary"></span>
+            </div>
+            <ul id="countsList" class="custom-scrollbar max-h-[260px] space-y-1 overflow-y-auto pr-1"></ul>
+          </section>
+
+          <section id="exportSection" class="hidden">
+            <h3 class="mb-4 text-title-md font-bold text-on-surface">Workspace</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="downloadPNGBtn" class="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">
+                <span class="material-symbols-outlined text-[18px]">image</span> PNG
+              </button>
+              <button id="downloadCSVBtn" class="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">
+                <span class="material-symbols-outlined text-[18px]">table</span> CSV
+              </button>
+            </div>
+            <button id="printBtn" class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container-highest py-4 text-label-sm font-bold text-on-surface transition-colors hover:bg-outline-variant" type="button">
+              <span class="material-symbols-outlined">print</span> 打印图纸
+            </button>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
 
   <script type="module" src="/js/app.js"></script>
 </body>
