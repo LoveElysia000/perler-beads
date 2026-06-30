@@ -84,4 +84,21 @@ function nearestMatcher(r, g, b) {
   assert.equal(high.grid[1][1].id, 'PURPLE', 'high fidelity should keep intentional small color details');
 }
 
+
+{
+  const pixels = [
+    [0, 0, 0], [245, 170, 200], [245, 170, 200], [245, 170, 200],
+    [245, 170, 200], [245, 170, 200], [245, 170, 200], [245, 170, 200],
+    [245, 170, 200], [245, 170, 200], [245, 170, 200], [245, 170, 200],
+    [245, 170, 200], [245, 170, 200], [245, 170, 200], [245, 170, 200],
+  ];
+  const result = buildMatchedGrid({
+    imageData: imageData(4, 4, pixels),
+    gridW: 1,
+    gridH: 1,
+    fidelity: 100,
+  }, nearestMatcher);
+  assert.equal(result.grid[0][0].id, 'PINK', 'highest fidelity should average the whole cell instead of letting one dark pixel dominate');
+}
+
 console.log('image processing tests passed');

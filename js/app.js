@@ -11,6 +11,7 @@ let highlightColor = null;
 let showCodes = true;
 let zoomLevel = 1;
 let paletteCache = {};
+const SAMPLE_SCALE = 6;
 
 // ── DOM ──
 const $ = (id) => document.getElementById(id);
@@ -64,27 +65,33 @@ function loadImage(file) {
 // ── Aspect Ratio ──
 function applyAspectRatio(img, targetW, targetH, mode) {
   const canvas = document.createElement('canvas');
-  canvas.width = targetW; canvas.height = targetH;
+  canvas.width = targetW * SAMPLE_SCALE;
+  canvas.height = targetH * SAMPLE_SCALE;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  const outputW = canvas.width;
+  const outputH = canvas.height;
   const imgRatio = img.width / img.height;
   const targetRatio = targetW / targetH;
 
   if (mode === 'fill') {
-    ctx.drawImage(img, 0, 0, targetW, targetH);
+    ctx.drawImage(img, 0, 0, outputW, outputH);
   } else if (mode === 'fit') {
     let dw, dh;
-    if (imgRatio > targetRatio) { dw = targetW; dh = targetW / imgRatio; }
-    else { dh = targetH; dw = targetH * imgRatio; }
+    if (imgRatio > targetRatio) { dw = outputW; dh = outputW / imgRatio; }
+    else { dh = outputH; dw = outputH * imgRatio; }
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, targetW, targetH);
-    ctx.drawImage(img, (targetW - dw) / 2, (targetH - dh) / 2, dw, dh);
+    ctx.fillRect(0, 0, outputW, outputH);
+    ctx.drawImage(img, (outputW - dw) / 2, (outputH - dh) / 2, dw, dh);
   } else {
     let sw, sh;
     if (imgRatio > targetRatio) { sh = img.height; sw = img.height * targetRatio; }
     else { sw = img.width; sh = img.width / targetRatio; }
-    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, targetW, targetH);
+    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, outputW, outputH);
   }
-  return ctx.getImageData(0, 0, targetW, targetH);
+  return ctx.getImageData(0, 0, outputW, outputH);
 }
 
 // ── Matching ──
