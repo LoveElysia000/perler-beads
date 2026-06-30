@@ -73,6 +73,8 @@ watchtower:
   image: containrrr/watchtower:latest
   container_name: perler-beads-watchtower
   restart: unless-stopped
+  environment:
+    - DOCKER_API_VERSION=1.40
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
   command: --interval 60 --cleanup --label-enable
