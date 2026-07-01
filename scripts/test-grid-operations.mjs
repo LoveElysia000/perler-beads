@@ -72,4 +72,14 @@ const K = { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] };
   assert.equal(grid[0][0].rgb[0], 240, 'clone should protect nested rgb arrays');
 }
 
+{
+  assert.deepEqual(cloneGrid(null), []);
+  assert.deepEqual(countGridColors(null), {});
+  const result = excludeAndRemapColor(null, 'PINK');
+  assert.deepEqual(result.grid, []);
+  assert.deepEqual(result.counts, {});
+  assert.equal(result.blocked, false);
+  assert.equal(result.remappedCount, 0);
+}
+
 console.log('grid operation tests passed');

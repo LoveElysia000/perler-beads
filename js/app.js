@@ -237,18 +237,25 @@ function applyPendingColorExclusions(gridResult) {
   let nextGrid = cloneGrid(gridResult.grid);
   let nextCounts = { ...gridResult.counts };
   const applied = new Set();
+  const blockedExcludedColorIds = [];
 
   for (const id of pendingExcludedColorIds) {
     const allowedIds = new Set(Object.keys(nextCounts).filter((colorId) => !pendingExcludedColorIds.has(colorId)));
     const result = excludeAndRemapColor(nextGrid, id, allowedIds);
-    if (result.blocked) continue;
+    if (result.blocked) {
+      blockedExcludedColorIds.push(id);
+      continue;
+    }
     nextGrid = result.grid;
     nextCounts = result.counts;
     if (result.remappedCount > 0) applied.add(id);
   }
 
-  excludedColorIds = applied;
+  excludedColorIds = new Set([...applied, ...blockedExcludedColorIds]);
   pendingExcludedColorIds = null;
+  if (blockedExcludedColorIds.length > 0) {
+    alert(`无法继续排除 ${blockedExcludedColorIds.join(', ')}，因为没有可替代颜色。`);
+  }
   return { grid: nextGrid, counts: nextCounts };
 }
 

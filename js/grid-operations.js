@@ -1,5 +1,5 @@
 export function cloneGrid(grid) {
-  return grid.map((row) => row.map((cell) => cloneCell(cell)));
+  return (grid || []).map((row) => (row || []).map((cell) => cloneCell(cell)));
 }
 
 export function countGridColors(grid) {

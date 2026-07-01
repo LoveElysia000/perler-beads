@@ -35,6 +35,10 @@ const checks = [
     name: 'restoring one excluded color preserves remaining exclusions during regeneration',
     pass: /runMatch\(\{ excludedColorIds: remainingExcludedColorIds \}\)/.test(app),
   },
+  {
+    name: 'pending exclusion remap failures alert and keep exclusions visible',
+    pass: /blockedExcludedColorIds/.test(app) && /无法继续排除/.test(app),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);
