@@ -4,8 +4,6 @@ import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
 import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
 
-const SAMPLE_SCALE = 6;
-
 // ── State ──
 let worker = null;
 let currentImage = null;       // original Image object
@@ -99,34 +97,45 @@ function loadImage(file) {
 
 // ── Aspect Ratio ──
 function prepareSourceImageData(img, targetW, targetH, mode) {
-  const canvas = document.createElement('canvas');
-  canvas.width = targetW * SAMPLE_SCALE;
-  canvas.height = targetH * SAMPLE_SCALE;
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-
-  const outputW = canvas.width;
-  const outputH = canvas.height;
-  const imgRatio = img.width / img.height;
   const targetRatio = targetW / targetH;
+  const imgRatio = img.width / img.height;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = false;
 
-  if (mode === 'fill') {
-    ctx.drawImage(img, 0, 0, outputW, outputH);
-  } else if (mode === 'fit') {
-    let dw, dh;
-    if (imgRatio > targetRatio) { dw = outputW; dh = outputW / imgRatio; }
-    else { dh = outputH; dw = outputH * imgRatio; }
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, outputW, outputH);
-    ctx.drawImage(img, (outputW - dw) / 2, (outputH - dh) / 2, dw, dh);
+  if (mode === 'fit') {
+    if (imgRatio > targetRatio) {
+      canvas.width = img.width;
+      canvas.height = Math.max(1, Math.round(img.width / targetRatio));
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, Math.round((canvas.height - img.height) / 2));
+    } else {
+      canvas.height = img.height;
+      canvas.width = Math.max(1, Math.round(img.height * targetRatio));
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, Math.round((canvas.width - img.width) / 2), 0);
+    }
+  } else if (mode === 'crop') {
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (imgRatio > targetRatio) {
+      sw = Math.round(img.height * targetRatio);
+      sx = Math.round((img.width - sw) / 2);
+    } else {
+      sh = Math.round(img.width / targetRatio);
+      sy = Math.round((img.height - sh) / 2);
+    }
+    canvas.width = sw;
+    canvas.height = sh;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   } else {
-    let sw, sh;
-    if (imgRatio > targetRatio) { sh = img.height; sw = img.height * targetRatio; }
-    else { sw = img.width; sh = img.width / targetRatio; }
-    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, outputW, outputH);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
   }
-  return ctx.getImageData(0, 0, outputW, outputH);
+
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 // ── Matching ──
