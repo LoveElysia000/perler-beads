@@ -23,7 +23,7 @@ self.onmessage = function (e) {
   }
 
   if (type === 'match') {
-    const { imageData, brand, gridW, gridH, skipColor, skipTransparent, fidelity } = payload;
+    const { imageData, brand, gridW, gridH, skipColor, skipTransparent, fidelity, samplingMode } = payload;
     const result = buildMatchedGrid({
       imageData,
       gridW,
@@ -31,6 +31,7 @@ self.onmessage = function (e) {
       skipColor,
       skipTransparent,
       fidelity,
+      samplingMode,
     }, getMatcher(brand));
 
     self.postMessage({ type: 'result', requestId, payload: result });

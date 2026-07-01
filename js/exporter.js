@@ -9,14 +9,36 @@ export function downloadPNG(canvas, filename = 'perler-pattern.png') {
   }, 'image/png');
 }
 
-export function downloadCSV(counts, paletteName) {
-  const rows = [['编号', '颜色名', '数量']];
-  for (const [id, count] of Object.entries(counts)) {
-    rows.push([id, '', count.toString()]);
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  if (/[,"\n\r]/.test(text)) {
+    return `"${text.replaceAll('"', '""')}"`;
   }
-  rows.slice(1).sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
+  return text;
+}
 
-  const csv = '\uFEFF' + rows.map(row => row.join(',')).join('\n');
+export function formatShoppingListCSV(counts, palette = null) {
+  const paletteData = {};
+  palette?.colors?.forEach(color => { paletteData[color.id] = color; });
+
+  const rows = [
+    ['编号', '颜色名', '数量'],
+    ...Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([id, count]) => {
+        const color = paletteData[id];
+        const colorName = color?.name || color?.nameCN || '';
+        return [id, colorName, count];
+      })
+  ];
+
+  return '\uFEFF' + rows
+    .map(row => row.map(escapeCsvCell).join(','))
+    .join('\n');
+}
+
+export function downloadCSV(counts, paletteName, palette = null) {
+  const csv = formatShoppingListCSV(counts, palette);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
