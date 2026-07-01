@@ -3,7 +3,7 @@ import { autoRemoveBorderBackground, cloneGrid, excludeAndRemapColor } from './g
 import { paintCell, eraseCell, floodEraseColor, replaceColor } from './grid-editing.js';
 import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
-import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
+import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, hexToRgb, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
 
 // ── State ──
 let worker = null;
@@ -35,6 +35,17 @@ function setStatus(text, isError = false) {
 
 function clearStatus() {
   $('statusMessage')?.classList.add('hidden');
+}
+
+// ── Helpers ──
+function buildHexToRgbMap() {
+  const map = new Map();
+  for (const gridRow of currentGrid?.grid || []) {
+    for (const cell of gridRow) {
+      if (cell?.hex && cell.rgb && !map.has(cell.hex)) map.set(cell.hex, cell.rgb);
+    }
+  }
+  return map;
 }
 
 // ── Edit Mode Helpers ──
@@ -130,7 +141,7 @@ function replaceSelectedHighlightColor() {
   }
   if (highlightHex === targetHex) return;
 
-  const targetCell = { hex: targetHex, rgb: (currentGrid.grid.flat().find(c => c?.hex === targetHex)?.rgb) || [128, 128, 128] };
+  const targetCell = { hex: targetHex, rgb: (currentGrid.grid.flat().find(c => c?.hex === targetHex)?.rgb) || hexToRgb(targetHex) || [128, 128, 128] };
 
   pushEditUndoSnapshot();
   const result = replaceColor(currentGrid.grid, highlightHex, targetCell);
@@ -401,14 +412,7 @@ function updateCountsList() {
   const totalBeads = entries.reduce((s, [, c]) => s + c, 0);
   $('colorStats').textContent = `${entries.length} 色 · ${totalBeads} 颗`;
 
-  const hexToRgbMap = new Map();
-  for (const gridRow of currentGrid.grid) {
-    for (const cell of gridRow) {
-      if (cell?.hex && cell.rgb && !hexToRgbMap.has(cell.hex)) {
-        hexToRgbMap.set(cell.hex, cell.rgb);
-      }
-    }
-  }
+  const hexToRgbMap = buildHexToRgbMap();
 
   $('countsList').innerHTML = entries.map(([hex, count]) => {
     if (!getColorEntry(hex, colorMapping)) return '';
@@ -432,13 +436,7 @@ function updateCountsList() {
       if (highlightHex) {
         li.classList.add('highlighted');
         const hex = li.dataset.hex;
-        const hexToRgbMap = new Map();
-        for (const gridRow of currentGrid.grid) {
-          for (const cell of gridRow) {
-            if (cell?.hex && cell.rgb && !hexToRgbMap.has(cell.hex)) hexToRgbMap.set(cell.hex, cell.rgb);
-          }
-        }
-        const rgb = hexToRgbMap.get(hex);
+        const rgb = buildHexToRgbMap().get(hex);
         if (rgb) updateSelectedEditColor({ hex, rgb });
       }
       renderFromGrid();
