@@ -3,12 +3,12 @@ import { buildMatchedGrid } from '../js/image-processing.js';
 
 const palette = {
   colors: [
-    { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] },
-    { id: 'RED', name: 'Red', rgb: [170, 70, 130] },
-    { id: 'PINK', name: 'Pink', rgb: [245, 170, 200] },
-    { id: 'PURPLE', name: 'Purple', rgb: [150, 90, 160] },
-    { id: 'BLUE', name: 'Blue', rgb: [90, 150, 250] },
-    { id: 'WHITE', name: 'White', rgb: [255, 255, 255] },
+    { hex: '#000000', rgb: [0, 0, 0] },
+    { hex: '#AA4682', rgb: [170, 70, 130] },
+    { hex: '#F5AAC8', rgb: [245, 170, 200] },
+    { hex: '#965AA0', rgb: [150, 90, 160] },
+    { hex: '#5A96FA', rgb: [90, 150, 250] },
+    { hex: '#FFFFFF', rgb: [255, 255, 255] },
   ],
 };
 
@@ -49,7 +49,7 @@ function nearestMatcher(r, g, b) {
     gridH: 1,
     fidelity: 90,
   }, nearestMatcher);
-  assert.equal(result.grid[0][0].id, 'PINK', 'cell sampling should use the whole block, not only the top-left pixel');
+  assert.equal(result.grid[0][0].hex, '#F5AAC8', 'cell sampling should use the whole block, not only the top-left pixel');
 }
 
 {
@@ -61,7 +61,7 @@ function nearestMatcher(r, g, b) {
     gridH: 1,
     fidelity: 90,
   }, nearestMatcher);
-  assert.equal(result.grid[0][0].id, 'BLACK', 'significant dark stroke coverage should preserve line art');
+  assert.equal(result.grid[0][0].hex, '#000000', 'significant dark stroke coverage should preserve line art');
 }
 
 {
@@ -82,10 +82,9 @@ function nearestMatcher(r, g, b) {
     gridH: 3,
     fidelity: 90,
   }, nearestMatcher);
-  assert.equal(low.grid[1][1].id, 'PINK', 'balanced/low fidelity should clean isolated color noise');
-  assert.equal(high.grid[1][1].id, 'PURPLE', 'high fidelity should keep intentional small color details');
+  assert.equal(low.grid[1][1].hex, '#F5AAC8', 'balanced/low fidelity should clean isolated color noise');
+  assert.equal(high.grid[1][1].hex, '#965AA0', 'high fidelity should keep intentional small color details');
 }
-
 
 {
   const pixels = [
@@ -100,7 +99,7 @@ function nearestMatcher(r, g, b) {
     gridH: 1,
     fidelity: 100,
   }, nearestMatcher);
-  assert.equal(result.grid[0][0].id, 'PINK', 'highest fidelity should average the whole cell instead of letting one dark pixel dominate');
+  assert.equal(result.grid[0][0].hex, '#F5AAC8', 'highest fidelity should average the whole cell instead of letting one dark pixel dominate');
 }
 
 {
@@ -117,7 +116,7 @@ function nearestMatcher(r, g, b) {
     fidelity: 100,
     samplingMode: 'dominant',
   }, nearestMatcher);
-  assert.equal(result.grid[0][0].id, 'RED', 'dominant sampling should match the most common quantized color family');
+  assert.equal(result.grid[0][0].hex, '#AA4682', 'dominant sampling should match the most common quantized color family');
 }
 
 {
@@ -134,14 +133,14 @@ function nearestMatcher(r, g, b) {
     fidelity: 100,
     samplingMode: 'average',
   }, nearestMatcher);
-  assert.equal(result.grid[0][0].id, 'PURPLE', 'average sampling should match the true average color rather than a red/blue tie-break');
+  assert.equal(result.grid[0][0].hex, '#965AA0', 'average sampling should match the true average color rather than a red/blue tie-break');
 }
 
 {
   const matcherColors = [
-    { id: 'RED_MAIN', name: 'Red Main', rgb: [245, 20, 20] },
-    { id: 'RED_ALT', name: 'Red Alt', rgb: [225, 65, 55] },
-    { id: 'BLUE', name: 'Blue', rgb: [20, 20, 245] },
+    { hex: '#F51414', rgb: [245, 20, 20] },
+    { hex: '#E14137', rgb: [225, 65, 55] },
+    { hex: '#1414F5', rgb: [20, 20, 245] },
   ];
   function matcher(r, g, b) {
     let best = null;
@@ -170,22 +169,17 @@ function nearestMatcher(r, g, b) {
     fidelity: 45,
     samplingMode: 'average',
   }, matcher);
-  assert.equal(result.counts.RED_ALT || 0, 0, 'balanced/low fidelity should merge lower-frequency similar reds');
-  assert.equal(result.counts.RED_MAIN, 8, 'similar red merge should preserve all red cells instead of relying on isolated-noise cleanup');
+  assert.equal(result.counts['#E14137'] || 0, 0, 'balanced/low fidelity should merge lower-frequency similar reds');
+  assert.equal(result.counts['#F51414'], 8, 'similar red merge should preserve all red cells instead of relying on isolated-noise cleanup');
 }
 
-
 {
-  const matcherColors = [
-    { id: 'VALID_MAIN', name: 'Valid Main', rgb: [100, 100, 100] },
-    { id: 'VALID_ALT', name: 'Valid Alt', rgb: [112, 112, 112] },
-  ];
   const cells = [
-    { id: 'VALID_MAIN', name: 'Valid Main', rgb: [100, 100, 100], dist: 0 },
-    { id: 'VALID_MAIN', name: 'Valid Main', rgb: [100, 100, 100], dist: 0 },
-    { id: 'VALID_ALT', name: 'Valid Alt', rgb: [112, 112, 112], dist: 0 },
-    { id: 'MISSING_RGB', name: 'Missing RGB', dist: 0 },
-    { id: 'BAD_RGB', name: 'Bad RGB', rgb: [100, NaN, 100], dist: 0 },
+    { hex: '#646464', rgb: [100, 100, 100], dist: 0 },
+    { hex: '#646464', rgb: [100, 100, 100], dist: 0 },
+    { hex: '#707070', rgb: [112, 112, 112], dist: 0 },
+    { hex: '#BAD001', dist: 0 },
+    { hex: '#BAD002', rgb: [100, NaN, 100], dist: 0 },
   ];
   function matcher(r) {
     return cells[r];
@@ -198,10 +192,10 @@ function nearestMatcher(r, g, b) {
     fidelity: 45,
     samplingMode: 'average',
   }, matcher);
-  assert.equal(result.counts.VALID_ALT || 0, 0, 'valid low-frequency similar colors should still merge');
-  assert.equal(result.counts.VALID_MAIN, 3, 'valid merged colors should be counted');
-  assert.equal(result.counts.MISSING_RGB, 1, 'missing rgb colors should remain counted without participating in merge');
-  assert.equal(result.counts.BAD_RGB, 1, 'invalid rgb colors should remain counted without participating in merge');
+  assert.equal(result.counts['#707070'] || 0, 0, 'valid low-frequency similar colors should still merge');
+  assert.equal(result.counts['#646464'], 3, 'valid merged colors should be counted');
+  assert.equal(result.counts['#BAD001'], 1, 'missing rgb colors should remain counted without participating in merge');
+  assert.equal(result.counts['#BAD002'], 1, 'invalid rgb colors should remain counted without participating in merge');
 }
 
 console.log('image processing tests passed');

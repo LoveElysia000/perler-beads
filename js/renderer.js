@@ -1,4 +1,5 @@
 // Canvas pattern renderer
+import { getColorCode } from './color-systems.js';
 
 const BOARD_SIZE = 29;
 const DEFAULT_CELL_SIZE = 16;
@@ -8,7 +9,9 @@ export function renderPattern(canvas, grid, options = {}) {
     showCodes = true,
     showBoardLines = true,
     highlightColor = null,
-    cellSize = DEFAULT_CELL_SIZE
+    cellSize = DEFAULT_CELL_SIZE,
+    colorSystem = 'MARD',
+    colorMapping = {},
   } = options;
 
   const h = grid.length, w = grid[0].length;
@@ -26,7 +29,7 @@ export function renderPattern(canvas, grid, options = {}) {
         ctx.fillRect(px, py, cellSize, cellSize);
       } else {
         const [r, g, b] = cell.rgb;
-        if (highlightColor && cell.id !== highlightColor) {
+        if (highlightColor && cell.hex !== highlightColor) {
           const dimR = Math.round(r * 0.25 + 220 * 0.75);
           const dimG = Math.round(g * 0.25 + 220 * 0.75);
           const dimB = Math.round(b * 0.25 + 220 * 0.75);
@@ -43,7 +46,7 @@ export function renderPattern(canvas, grid, options = {}) {
           ctx.font = `600 ${fontSize}px "Inter", system-ui, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(cell.id, px + cellSize / 2, py + cellSize / 2);
+          ctx.fillText(getColorCode(cell.hex, colorSystem, colorMapping), px + cellSize / 2, py + cellSize / 2);
         }
       }
 

@@ -33,11 +33,27 @@ const checks = [
   },
   {
     name: 'restoring one excluded color preserves remaining exclusions during regeneration',
-    pass: /runMatch\(\{ excludedColorIds: remainingExcludedColorIds \}\)/.test(app),
+    pass: /runMatch\(\{ excludedColorHexes: remainingExcludedColorHexes \}\)/.test(app),
   },
   {
     name: 'pending exclusion remap failures alert and keep exclusions visible',
-    pass: /blockedExcludedColorIds/.test(app) && /无法继续排除/.test(app),
+    pass: /blockedExcludedColorHexes/.test(app) && /无法继续排除/.test(app),
+  },
+  {
+    name: 'uses color system selector instead of legacy brand selector',
+    pass: /id="colorSystemSelect"/.test(html) && !/id="brandSelect"/.test(html),
+  },
+  {
+    name: 'color system selector exposes supported systems',
+    pass: ['MARD', 'COCO', '漫漫', '盼盼', '咪小窝'].every((label) => html.includes(label)),
+  },
+  {
+    name: 'status message container exists for mapping load errors',
+    pass: /id="statusMessage"/.test(html),
+  },
+  {
+    name: 'legacy brand recommendation UI is removed from main flow',
+    pass: !/id="brandRecommend"/.test(html) && !/showBrandRecommendation/.test(app),
   },
 ];
 

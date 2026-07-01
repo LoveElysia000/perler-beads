@@ -6,8 +6,8 @@ export function countGridColors(grid) {
   const counts = {};
   for (const row of grid || []) {
     for (const cell of row || []) {
-      if (!cell) continue;
-      counts[cell.id] = (counts[cell.id] || 0) + 1;
+      if (!cell?.hex) continue;
+      counts[cell.hex] = (counts[cell.hex] || 0) + 1;
     }
   }
   return counts;
@@ -22,7 +22,7 @@ export function rgbDistance(a, b) {
 
 export function autoRemoveBorderBackground(grid) {
   if (!grid?.length || !grid[0]?.length) {
-    return { grid, counts: {}, removedCount: 0, backgroundId: null };
+    return { grid, counts: {}, removedCount: 0, backgroundHex: null };
   }
 
   const h = grid.length;
@@ -31,8 +31,8 @@ export function autoRemoveBorderBackground(grid) {
 
   const countCell = (y, x) => {
     const cell = grid[y]?.[x];
-    if (!cell) return;
-    borderCounts.set(cell.id, (borderCounts.get(cell.id) || 0) + 1);
+    if (!cell?.hex) return;
+    borderCounts.set(cell.hex, (borderCounts.get(cell.hex) || 0) + 1);
   };
 
   for (let x = 0; x < w; x++) {
@@ -46,10 +46,10 @@ export function autoRemoveBorderBackground(grid) {
 
   if (borderCounts.size === 0) {
     const cloned = cloneGrid(grid);
-    return { grid: cloned, counts: countGridColors(cloned), removedCount: 0, backgroundId: null };
+    return { grid: cloned, counts: countGridColors(cloned), removedCount: 0, backgroundHex: null };
   }
 
-  const [backgroundId] = [...borderCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const [backgroundHex] = [...borderCounts.entries()].sort((a, b) => b[1] - a[1])[0];
   const result = cloneGrid(grid);
   const visited = Array.from({ length: h }, () => Array(w).fill(false));
   const stack = [];
@@ -57,7 +57,7 @@ export function autoRemoveBorderBackground(grid) {
   const pushIfBackground = (y, x) => {
     if (y < 0 || y >= h || x < 0 || x >= w || visited[y][x]) return;
     const cell = result[y][x];
-    if (!cell || cell.id !== backgroundId) return;
+    if (!cell || cell.hex !== backgroundHex) return;
     visited[y][x] = true;
     stack.push([y, x]);
   };
@@ -84,33 +84,33 @@ export function autoRemoveBorderBackground(grid) {
     pushIfBackground(y, x + 1);
   }
 
-  return { grid: result, counts: countGridColors(result), removedCount, backgroundId };
+  return { grid: result, counts: countGridColors(result), removedCount, backgroundHex };
 }
 
-export function excludeAndRemapColor(grid, excludedId, allowedColorIds = null) {
+export function excludeAndRemapColor(grid, excludedHex, allowedColorHexes = null) {
   const counts = countGridColors(grid);
-  if (!counts[excludedId]) {
-    return { grid: cloneGrid(grid), counts, remappedCount: 0, replacementId: null, blocked: false };
+  if (!counts[excludedHex]) {
+    return { grid: cloneGrid(grid), counts, remappedCount: 0, replacementHex: null, blocked: false };
   }
 
-  const colorById = new Map();
+  const colorByHex = new Map();
   for (const row of grid || []) {
     for (const cell of row || []) {
-      if (cell) colorById.set(cell.id, cell);
+      if (cell?.hex) colorByHex.set(cell.hex, cell);
     }
   }
 
-  const allowed = new Set(allowedColorIds || Object.keys(counts));
-  allowed.delete(excludedId);
+  const allowed = new Set(allowedColorHexes || Object.keys(counts));
+  allowed.delete(excludedHex);
   const candidates = [...allowed]
-    .map((id) => colorById.get(id))
+    .map((hex) => colorByHex.get(hex))
     .filter(Boolean);
 
   if (candidates.length === 0) {
-    return { grid: cloneGrid(grid), counts, remappedCount: 0, replacementId: null, blocked: true };
+    return { grid: cloneGrid(grid), counts, remappedCount: 0, replacementHex: null, blocked: true };
   }
 
-  const excludedCell = colorById.get(excludedId);
+  const excludedCell = colorByHex.get(excludedHex);
   let best = candidates[0];
   let bestDistance = Infinity;
   for (const candidate of candidates) {
@@ -124,7 +124,7 @@ export function excludeAndRemapColor(grid, excludedId, allowedColorIds = null) {
   let remappedCount = 0;
   const result = grid.map((row) => row.map((cell) => {
     if (!cell) return null;
-    if (cell.id !== excludedId) return cloneCell(cell);
+    if (cell.hex !== excludedHex) return cloneCell(cell);
     remappedCount++;
     return cloneCell(best);
   }));
@@ -133,7 +133,7 @@ export function excludeAndRemapColor(grid, excludedId, allowedColorIds = null) {
     grid: result,
     counts: countGridColors(result),
     remappedCount,
-    replacementId: best.id,
+    replacementHex: best.hex,
     blocked: false,
   };
 }

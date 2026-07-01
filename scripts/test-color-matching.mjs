@@ -7,24 +7,25 @@ import { createColorMatcher, isSpecialEffectColor } from '../js/color-matching.j
   assert.equal(isSpecialEffectColor({ name: 'Translucent Pink' }), true);
   assert.equal(isSpecialEffectColor({ name: 'Clear' }), true);
   assert.equal(isSpecialEffectColor({ name: 'Pastel Rose' }), false);
+  assert.equal(isSpecialEffectColor({ hex: '#FAF4C8' }), false, 'unified palette entries without names are regular colors');
 }
 
 {
   const matcher = createColorMatcher([
-    { id: 'NORMAL_YELLOW', name: 'Yellow', rgb: [210, 190, 60] },
-    { id: 'NEON_YELLOW', name: 'Fluorescent Yellow', rgb: [245, 245, 20] },
+    { hex: '#D2BE3C', name: 'Yellow', rgb: [210, 190, 60] },
+    { hex: '#F5F514', name: 'Fluorescent Yellow', rgb: [245, 245, 20] },
   ]);
   const match = matcher(242, 242, 25);
-  assert.equal(match.id, 'NORMAL_YELLOW', 'default matching should not use fluorescent/neon colors');
+  assert.equal(match.hex, '#D2BE3C', 'default matching should not use fluorescent/neon colors');
 }
 
 {
   const matcher = createColorMatcher([
-    { id: 'BRIGHT_ROSE', name: 'Bright Rose', rgb: [240, 151, 176] },
-    { id: 'MUTED_BLUSH', name: 'Muted Blush', rgb: [173, 138, 130] },
+    { hex: '#F097B0', rgb: [240, 151, 176] },
+    { hex: '#AD8A82', rgb: [173, 138, 130] },
   ]);
   const match = matcher(180, 145, 170);
-  assert.equal(match.id, 'MUTED_BLUSH', 'matching should not choose a much brighter bead just because Delta E is slightly lower');
+  assert.equal(match.hex, '#AD8A82', 'matching should preserve unified hex identity');
 }
 
 console.log('color matching tests passed');

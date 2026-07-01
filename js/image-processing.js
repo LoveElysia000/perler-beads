@@ -108,35 +108,35 @@ function mergeSimilarMatchedColors(grid, fidelity) {
   for (const row of grid) {
     for (const cell of row) {
       if (!cell || !isValidRgb(cell.rgb)) continue;
-      const stat = colorStats.get(cell.id) || { cell, count: 0 };
+      const stat = colorStats.get(cell.hex) || { cell, count: 0 };
       stat.count++;
-      colorStats.set(cell.id, stat);
+      colorStats.set(cell.hex, stat);
     }
   }
 
   const colors = [...colorStats.entries()]
-    .map(([id, stat]) => ({ id, ...stat }))
+    .map(([hex, stat]) => ({ hex, ...stat }))
     .sort((a, b) => b.count - a.count);
   const replacements = new Map();
 
   for (let i = 0; i < colors.length; i++) {
     const high = colors[i];
-    if (replacements.has(high.id)) continue;
+    if (replacements.has(high.hex)) continue;
 
     for (let j = i + 1; j < colors.length; j++) {
       const low = colors[j];
-      if (replacements.has(low.id)) continue;
+      if (replacements.has(low.hex)) continue;
       if (low.count >= high.count) continue;
       if (rgbDistance(high.cell.rgb, low.cell.rgb) <= threshold) {
-        replacements.set(low.id, high.cell);
+        replacements.set(low.hex, high.cell);
       }
     }
   }
 
   if (replacements.size === 0) return grid;
   return grid.map((row) => row.map((cell) => {
-    if (!cell || !replacements.has(cell.id)) return cell;
-    return { ...replacements.get(cell.id) };
+    if (!cell || !replacements.has(cell.hex)) return cell;
+    return { ...replacements.get(cell.hex) };
   }));
 }
 
@@ -162,17 +162,17 @@ function cleanMatchedNoise(grid) {
           if (ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
           const neighbor = grid[ny][nx];
           if (!neighbor) continue;
-          if (neighbor.id === cell.id) sameCount++;
-          neighborCounts.set(neighbor.id, (neighborCounts.get(neighbor.id) || 0) + 1);
-          neighborCells.set(neighbor.id, neighbor);
+          if (neighbor.hex === cell.hex) sameCount++;
+          neighborCounts.set(neighbor.hex, (neighborCounts.get(neighbor.hex) || 0) + 1);
+          neighborCells.set(neighbor.hex, neighbor);
         }
       }
 
       if (sameCount > 0 || neighborCounts.size === 0) continue;
 
-      const [bestId, bestCount] = [...neighborCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+      const [bestHex, bestCount] = [...neighborCounts.entries()].sort((a, b) => b[1] - a[1])[0];
       if (bestCount >= 3) {
-        result[y][x] = { ...neighborCells.get(bestId) };
+        result[y][x] = { ...neighborCells.get(bestHex) };
       }
     }
   }
@@ -185,7 +185,7 @@ function countColors(grid) {
   for (const row of grid) {
     for (const cell of row) {
       if (!cell) continue;
-      counts[cell.id] = (counts[cell.id] || 0) + 1;
+      counts[cell.hex] = (counts[cell.hex] || 0) + 1;
     }
   }
   return counts;
@@ -234,7 +234,7 @@ export function buildMatchedGrid({
       }
 
       const match = matchColor(sampleColor.r, sampleColor.g, sampleColor.b);
-      grid[gy][gx] = { id: match.id, name: match.name, rgb: match.rgb, dist: match.dist };
+      grid[gy][gx] = { hex: match.hex, rgb: match.rgb, dist: match.dist };
     }
   }
 

@@ -2,41 +2,74 @@
 import { autoRemoveBorderBackground, cloneGrid, excludeAndRemapColor } from './grid-operations.js';
 import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
+import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
+
+const SAMPLE_SCALE = 6;
 
 // ── State ──
 let worker = null;
 let currentImage = null;       // original Image object
 let currentGrid = null;        // { grid, counts }
-let currentBrand = 'hama';
-let highlightColor = null;
+let currentColorSystem = DEFAULT_COLOR_SYSTEM;
+let highlightHex = null;
 let showCodes = true;
 let zoomLevel = 1;
-let paletteCache = {};
+let colorMapping = {};
+let unifiedPalette = [];
 let gridActionSnapshot = null;
-let excludedColorIds = new Set();
-let pendingExcludedColorIds = null;
+let excludedColorHexes = new Set();
+let pendingExcludedColorHexes = null;
 
 // ── DOM ──
 const $ = (id) => document.getElementById(id);
+
+function setStatus(text, isError = false) {
+  const el = $('statusMessage');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('!bg-red-100', isError);
+  el.classList.toggle('!text-red-800', isError);
+  el.classList.remove('hidden');
+}
+
+function clearStatus() {
+  $('statusMessage')?.classList.add('hidden');
+}
 
 // ── Worker Init ──
 function initWorker() {
   worker = new Worker('/js/worker.js', { type: 'module' });
   worker.onmessage = handleWorkerMessage;
-  Promise.all([
-    fetch('/palettes/perler.json').then(r => r.json()),
-    fetch('/palettes/hama.json').then(r => r.json()),
-    fetch('/palettes/artkal_c.json').then(r => r.json()),
-  ]).then(([perler, hama, artkal]) => {
-    paletteCache = { perler, hama, artkal_c: artkal };
-    worker.postMessage({ type: 'init', payload: { palettes: paletteCache } });
-  }).catch(err => console.error('Failed to load palettes:', err));
+  fetch('/palettes/color-system-mapping.json')
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(mapping => {
+      const validation = validateColorSystemMapping(mapping);
+      if (validation.errors.length > 0) {
+        setStatus('色号映射数据无效，请检查数据文件。', true);
+        console.error('Color mapping validation errors:', validation.errors);
+        return;
+      }
+      if (validation.warnings.length > 0) {
+        console.warn('Color mapping warnings:', validation.warnings);
+      }
+      colorMapping = mapping;
+      unifiedPalette = buildPaletteFromMapping(mapping);
+      worker.postMessage({ type: 'init', payload: { palette: unifiedPalette } });
+      clearStatus();
+    })
+    .catch(err => {
+      setStatus('色号映射加载失败，请刷新重试。', true);
+      console.error('Failed to load color system mapping:', err);
+    });
 }
 
 function handleWorkerMessage(e) {
   const { type, payload } = e.data;
   if (type === 'ready') {
-    console.log('Worker ready');
+    console.log('Worker ready with unified color system palette');
   } else if (type === 'result') {
     currentGrid = applyPendingColorExclusions(payload);
     renderFromGrid();
@@ -46,8 +79,6 @@ function handleWorkerMessage(e) {
     $('countsSection').classList.remove('hidden');
     $('generateBtn').disabled = false;
     $('generateBtn').innerHTML = '<span class="material-symbols-outlined">replay</span>重新生成';
-  } else if (type === 'recommendation') {
-    showBrandRecommendation(payload);
   }
 }
 
@@ -59,7 +90,7 @@ function loadImage(file) {
     const img = new Image();
     img.onload = () => {
       currentImage = img;
-      $('generateBtn').disabled = false;
+      $('generateBtn').disabled = unifiedPalette.length === 0;
     };
     img.src = e.target.result;
   };
@@ -68,48 +99,34 @@ function loadImage(file) {
 
 // ── Aspect Ratio ──
 function prepareSourceImageData(img, targetW, targetH, mode) {
-  const targetRatio = targetW / targetH;
-  const imgRatio = img.width / img.height;
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  canvas.width = targetW * SAMPLE_SCALE;
+  canvas.height = targetH * SAMPLE_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
-  if (mode === 'fit') {
-    if (imgRatio > targetRatio) {
-      canvas.width = img.width;
-      canvas.height = Math.max(1, Math.round(img.width / targetRatio));
-      ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, Math.round((canvas.height - img.height) / 2));
-    } else {
-      canvas.height = img.height;
-      canvas.width = Math.max(1, Math.round(img.height * targetRatio));
-      ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, Math.round((canvas.width - img.width) / 2), 0);
-    }
-  } else if (mode === 'crop') {
-    let sx = 0, sy = 0, sw = img.width, sh = img.height;
-    if (imgRatio > targetRatio) {
-      sw = Math.round(img.height * targetRatio);
-      sx = Math.round((img.width - sw) / 2);
-    } else {
-      sh = Math.round(img.width / targetRatio);
-      sy = Math.round((img.height - sh) / 2);
-    }
-    canvas.width = sw;
-    canvas.height = sh;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const outputW = canvas.width;
+  const outputH = canvas.height;
+  const imgRatio = img.width / img.height;
+  const targetRatio = targetW / targetH;
+
+  if (mode === 'fill') {
+    ctx.drawImage(img, 0, 0, outputW, outputH);
+  } else if (mode === 'fit') {
+    let dw, dh;
+    if (imgRatio > targetRatio) { dw = outputW; dh = outputW / imgRatio; }
+    else { dh = outputH; dw = outputH * imgRatio; }
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, outputW, outputH);
+    ctx.drawImage(img, (outputW - dw) / 2, (outputH - dh) / 2, dw, dh);
   } else {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, 0, 0);
+    let sw, sh;
+    if (imgRatio > targetRatio) { sh = img.height; sw = img.height * targetRatio; }
+    else { sw = img.width; sh = img.width / targetRatio; }
+    ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, outputW, outputH);
   }
-
-  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return ctx.getImageData(0, 0, outputW, outputH);
 }
 
 // ── Matching ──
@@ -123,9 +140,9 @@ function runMatch(options = {}) {
   $('previewArea').classList.remove('hidden');
   $('generateBtn').disabled = true;
   $('generateBtn').textContent = '处理中...';
-  const pendingExclusions = options.excludedColorIds || null;
+  const pendingExclusions = options.excludedColorHexes || null;
   if (pendingExclusions) {
-    pendingExcludedColorIds = new Set(pendingExclusions);
+    pendingExcludedColorHexes = new Set(pendingExclusions);
   }
   resetGridActionState({ preservePending: Boolean(pendingExclusions) });
 
@@ -145,18 +162,12 @@ function runMatch(options = {}) {
     type: 'match',
     payload: {
       imageData: processed,
-      brand: currentBrand,
       gridW: w, gridH: h,
       skipColor,
       skipTransparent: $('skipTransparent').checked,
       fidelity: parseInt($('fidelity').value) || 60,
       samplingMode: $('samplingMode')?.value || 'lineart'
     }
-  });
-
-  worker.postMessage({
-    type: 'recommend',
-    payload: { imageData: processed, gridW: w, gridH: h }
   });
 }
 
@@ -170,8 +181,10 @@ function renderFromGrid() {
   renderPattern($('patternCanvas'), currentGrid.grid, {
     showCodes,
     showBoardLines: true,
-    highlightColor,
-    cellSize
+    highlightColor: highlightHex,
+    cellSize,
+    colorSystem: currentColorSystem,
+    colorMapping,
   });
 }
 
@@ -180,7 +193,7 @@ function saveGridActionSnapshot() {
   gridActionSnapshot = {
     grid: cloneGrid(currentGrid.grid),
     counts: { ...currentGrid.counts },
-    excludedColorIds: new Set(excludedColorIds),
+    excludedColorHexes: new Set(excludedColorHexes),
   };
   $('undoGridActionBtn').disabled = false;
 }
@@ -189,14 +202,14 @@ function refreshExcludedColorsPanel() {
   const panel = $('excludedColorsPanel');
   const list = $('excludedColorsList');
   if (!panel || !list) return;
-  panel.classList.toggle('hidden', excludedColorIds.size === 0);
-  list.innerHTML = [...excludedColorIds].map((id) => `
+  panel.classList.toggle('hidden', excludedColorHexes.size === 0);
+  list.innerHTML = [...excludedColorHexes].map((hex) => `
     <li class="flex items-center justify-between gap-2">
-      <span>${id}</span>
-      <button class="restore-excluded-color-btn rounded border border-outline-variant px-2 py-1" data-restore-id="${id}" type="button">恢复</button>
+      <span>${getColorCode(hex, currentColorSystem, colorMapping)} ${hex}</span>
+      <button class="restore-excluded-color-btn rounded border border-outline-variant px-2 py-1" data-restore-hex="${hex}" type="button">恢复</button>
     </li>`).join('');
   list.querySelectorAll('.restore-excluded-color-btn').forEach((btn) => {
-    btn.addEventListener('click', () => restoreExcludedColor(btn.dataset.restoreId));
+    btn.addEventListener('click', () => restoreExcludedColor(btn.dataset.restoreHex));
   });
 }
 
@@ -206,7 +219,7 @@ function restoreGridActionSnapshot() {
     grid: cloneGrid(gridActionSnapshot.grid),
     counts: { ...gridActionSnapshot.counts },
   };
-  excludedColorIds = new Set(gridActionSnapshot.excludedColorIds);
+  excludedColorHexes = new Set(gridActionSnapshot.excludedColorHexes);
   gridActionSnapshot = null;
   $('undoGridActionBtn').disabled = true;
   renderFromGrid();
@@ -214,47 +227,47 @@ function restoreGridActionSnapshot() {
   refreshExcludedColorsPanel();
 }
 
-function restoreExcludedColor(id) {
-  if (!excludedColorIds.has(id)) return;
-  const remainingExcludedColorIds = new Set(excludedColorIds);
-  remainingExcludedColorIds.delete(id);
-  excludedColorIds = remainingExcludedColorIds;
+function restoreExcludedColor(hex) {
+  if (!excludedColorHexes.has(hex)) return;
+  const remainingExcludedColorHexes = new Set(excludedColorHexes);
+  remainingExcludedColorHexes.delete(hex);
+  excludedColorHexes = remainingExcludedColorHexes;
   refreshExcludedColorsPanel();
-  if (currentImage) runMatch({ excludedColorIds: remainingExcludedColorIds });
+  if (currentImage) runMatch({ excludedColorHexes: remainingExcludedColorHexes });
 }
 
 function resetGridActionState(options = {}) {
   gridActionSnapshot = null;
-  excludedColorIds = new Set();
-  if (!options.preservePending) pendingExcludedColorIds = null;
+  excludedColorHexes = new Set();
+  if (!options.preservePending) pendingExcludedColorHexes = null;
   $('undoGridActionBtn').disabled = true;
   refreshExcludedColorsPanel();
 }
 
 function applyPendingColorExclusions(gridResult) {
-  if (!pendingExcludedColorIds?.size) return gridResult;
+  if (!pendingExcludedColorHexes?.size) return gridResult;
 
   let nextGrid = cloneGrid(gridResult.grid);
   let nextCounts = { ...gridResult.counts };
   const applied = new Set();
-  const blockedExcludedColorIds = [];
+  const blockedExcludedColorHexes = [];
 
-  for (const id of pendingExcludedColorIds) {
-    const allowedIds = new Set(Object.keys(nextCounts).filter((colorId) => !pendingExcludedColorIds.has(colorId)));
-    const result = excludeAndRemapColor(nextGrid, id, allowedIds);
+  for (const hex of pendingExcludedColorHexes) {
+    const allowedHexes = new Set(Object.keys(nextCounts).filter((h) => !pendingExcludedColorHexes.has(h)));
+    const result = excludeAndRemapColor(nextGrid, hex, allowedHexes);
     if (result.blocked) {
-      blockedExcludedColorIds.push(id);
+      blockedExcludedColorHexes.push(hex);
       continue;
     }
     nextGrid = result.grid;
     nextCounts = result.counts;
-    if (result.remappedCount > 0) applied.add(id);
+    if (result.remappedCount > 0) applied.add(hex);
   }
 
-  excludedColorIds = new Set([...applied, ...blockedExcludedColorIds]);
-  pendingExcludedColorIds = null;
-  if (blockedExcludedColorIds.length > 0) {
-    alert(`无法继续排除 ${blockedExcludedColorIds.join(', ')}，因为没有可替代颜色。`);
+  excludedColorHexes = new Set([...applied, ...blockedExcludedColorHexes]);
+  pendingExcludedColorHexes = null;
+  if (blockedExcludedColorHexes.length > 0) {
+    alert(`无法继续排除 ${blockedExcludedColorHexes.map(h => getColorCode(h, currentColorSystem, colorMapping)).join(', ')}，因为没有可替代颜色。`);
   }
   return { grid: nextGrid, counts: nextCounts };
 }
@@ -263,24 +276,29 @@ function applyPendingColorExclusions(gridResult) {
 function updateCountsList() {
   if (!currentGrid) return;
   const entries = Object.entries(currentGrid.counts).sort((a, b) => b[1] - a[1]);
-  const palette = paletteCache[currentBrand];
-  if (!palette) return;
-
-  const paletteData = {};
-  palette.colors.forEach(c => { paletteData[c.id] = c; });
-
   const totalBeads = entries.reduce((s, [, c]) => s + c, 0);
   $('colorStats').textContent = `${entries.length} 色 · ${totalBeads} 颗`;
 
-  $('countsList').innerHTML = entries.map(([id, count]) => {
-    const color = paletteData[id];
-    if (!color) return '';
-    const [r, g, b] = color.rgb;
-    return `<li data-id="${id}">
+  const hexToRgbMap = new Map();
+  for (const gridRow of currentGrid.grid) {
+    for (const cell of gridRow) {
+      if (cell?.hex && cell.rgb && !hexToRgbMap.has(cell.hex)) {
+        hexToRgbMap.set(cell.hex, cell.rgb);
+      }
+    }
+  }
+
+  $('countsList').innerHTML = entries.map(([hex, count]) => {
+    if (!getColorEntry(hex, colorMapping)) return '';
+    const code = getColorCode(hex, currentColorSystem, colorMapping);
+    const rgb = hexToRgbMap.get(hex) || [128, 128, 128];
+    const [r, g, b] = rgb;
+
+    return `<li data-hex="${hex}">
       <span class="swatch" style="background:rgb(${r},${g},${b})"></span>
-      <span class="name">${id} ${color.name}</span>
+      <span class="name">${code} ${hex}</span>
       <span class="count">×${count}</span>
-      <button class="exclude-color-btn" data-exclude-id="${id}" type="button">排除</button>
+      <button class="exclude-color-btn" data-exclude-hex="${hex}" type="button">排除</button>
     </li>`;
   }).join('');
 
@@ -288,8 +306,8 @@ function updateCountsList() {
     li.addEventListener('click', (event) => {
       if (event.target.closest('.exclude-color-btn')) return;
       $('countsList').querySelectorAll('li').forEach(l => l.classList.remove('highlighted'));
-      highlightColor = highlightColor === li.dataset.id ? null : li.dataset.id;
-      if (highlightColor) li.classList.add('highlighted');
+      highlightHex = highlightHex === li.dataset.hex ? null : li.dataset.hex;
+      if (highlightHex) li.classList.add('highlighted');
       renderFromGrid();
     });
   });
@@ -297,39 +315,23 @@ function updateCountsList() {
   $('countsList').querySelectorAll('.exclude-color-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       if (!currentGrid) return;
-      const id = btn.dataset.excludeId;
+      const hex = btn.dataset.excludeHex;
       saveGridActionSnapshot();
-      const allowedIds = new Set(Object.keys(currentGrid.counts).filter((colorId) => !excludedColorIds.has(colorId)));
-      const result = excludeAndRemapColor(currentGrid.grid, id, allowedIds);
+      const allowedHexes = new Set(Object.keys(currentGrid.counts).filter((h) => !excludedColorHexes.has(h)));
+      const result = excludeAndRemapColor(currentGrid.grid, hex, allowedHexes);
       if (result.blocked) {
         restoreGridActionSnapshot();
-        alert(`无法排除 ${id}，因为没有可替代颜色。`);
+        alert(`无法排除 ${getColorCode(hex, currentColorSystem, colorMapping)}，因为没有可替代颜色。`);
         return;
       }
-      excludedColorIds.add(id);
+      excludedColorHexes.add(hex);
       currentGrid = { grid: result.grid, counts: result.counts };
-      if (highlightColor === id) highlightColor = null;
+      if (highlightHex === hex) highlightHex = null;
       renderFromGrid();
       updateCountsList();
       refreshExcludedColorsPanel();
     });
   });
-}
-
-function showBrandRecommendation(results) {
-  const current = results[currentBrand];
-  if (!current) return;
-  let best = currentBrand, bestDist = current.avgDeltaE;
-  for (const [name, r] of Object.entries(results)) {
-    if (r.avgDeltaE < bestDist) { bestDist = r.avgDeltaE; best = name; }
-  }
-  if (best !== currentBrand) {
-    const names = { perler: 'Perler', hama: 'Hama', artkal_c: 'Artkal C' };
-    $('brandRecommend').textContent = `💡 推荐 ${names[best]}（ΔE ${bestDist} vs ${names[currentBrand]} ${current.avgDeltaE}）`;
-    $('brandRecommend').classList.remove('hidden');
-  } else {
-    $('brandRecommend').classList.add('hidden');
-  }
 }
 
 // ── Event Listeners ──
@@ -359,9 +361,12 @@ document.querySelectorAll('[data-w]').forEach(btn => {
   });
 });
 
-$('brandSelect').addEventListener('change', (e) => {
-  currentBrand = e.target.value;
-  if (currentImage) runMatch();
+$('colorSystemSelect').addEventListener('change', (e) => {
+  currentColorSystem = e.target.value;
+  if (currentGrid) {
+    renderFromGrid();
+    updateCountsList();
+  }
 });
 
 $('samplingMode').addEventListener('change', () => {
@@ -387,7 +392,7 @@ $('fidelity').addEventListener('input', () => {
   fidelityTimer = setTimeout(() => { if (currentImage) runMatch(); }, 200);
 });
 
-$('generateBtn').addEventListener('click', () => { if (currentImage) runMatch(); });
+$('generateBtn').addEventListener('click', () => { if (currentImage && unifiedPalette.length > 0) runMatch(); });
 
 $('viewColor').addEventListener('click', () => {
   showCodes = false;
@@ -407,7 +412,7 @@ $('zoomOutBtn').addEventListener('click', () => { zoomLevel = Math.max(0.25, zoo
 
 $('downloadPNGBtn').addEventListener('click', () => downloadPNG($('patternCanvas')));
 $('downloadCSVBtn').addEventListener('click', () => {
-  if (currentGrid) downloadCSV(currentGrid.counts, currentBrand, paletteCache[currentBrand]);
+  if (currentGrid) downloadCSV(currentGrid.counts, currentColorSystem, colorMapping);
 });
 $('printBtn').addEventListener('click', () => {
   if (currentGrid) printPattern($('patternCanvas'), currentGrid.grid[0].length, currentGrid.grid.length);

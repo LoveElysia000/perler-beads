@@ -1,4 +1,5 @@
 // Export utilities: PNG download, CSV shopping list, print
+import { getColorCode } from './color-systems.js';
 
 export function downloadPNG(canvas, filename = 'perler-pattern.png') {
   canvas.toBlob((blob) => {
@@ -17,19 +18,12 @@ function escapeCsvCell(value) {
   return text;
 }
 
-export function formatShoppingListCSV(counts, palette = null) {
-  const paletteData = {};
-  palette?.colors?.forEach(color => { paletteData[color.id] = color; });
-
+export function formatShoppingListCSV(counts, colorSystem, mapping = {}) {
   const rows = [
-    ['编号', '颜色名', '数量'],
+    ['code', 'hex', 'count'],
     ...Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
-      .map(([id, count]) => {
-        const color = paletteData[id];
-        const colorName = color?.name || color?.nameCN || '';
-        return [id, colorName, count];
-      })
+      .map(([hex, count]) => [getColorCode(hex, colorSystem, mapping), hex, count])
   ];
 
   return '\uFEFF' + rows
@@ -37,12 +31,12 @@ export function formatShoppingListCSV(counts, palette = null) {
     .join('\n');
 }
 
-export function downloadCSV(counts, paletteName, palette = null) {
-  const csv = formatShoppingListCSV(counts, palette);
+export function downloadCSV(counts, colorSystem, mapping = {}) {
+  const csv = formatShoppingListCSV(counts, colorSystem, mapping);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `${paletteName}-shopping-list.csv`; a.click();
+  a.href = url; a.download = `${colorSystem}-shopping-list.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 

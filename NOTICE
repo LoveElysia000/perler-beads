@@ -1,0 +1,23 @@
+PixelBead Workbench — 拼豆图纸生成器
+
+Copyright (c) 2025-2026 PixelBead contributors.
+
+This project includes color system mapping data (palettes/color-system-mapping.json)
+derived from the Zippland/perler-beads project:
+
+  https://github.com/Zippland/perler-beads
+  Commit: 2efee730f73dd4eb472ebde443a022d11f98bc21
+  Obtained: 2026-07-01
+
+The mapping data is used as-is with format adjustments (pulled into
+JSON file structure) to support the MARD / COCO / 漫漫 / 盼盼 / 咪小窝
+color system display. No structural changes were made to the hex-to-code
+mappings themselves.
+
+Both the Zippland/perler-beads project and this project are licensed under
+the GNU Affero General Public License v3.0 (AGPL-3.0-only).
+
+See LICENSE for the full license text.
+
+The Zippland/perler-beads project's original license and copyright notice
+are preserved in LICENSE.

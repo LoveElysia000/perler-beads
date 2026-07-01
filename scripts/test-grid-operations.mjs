@@ -6,11 +6,11 @@ import {
   excludeAndRemapColor,
 } from '../js/grid-operations.js';
 
-const W = { id: 'WHITE', name: 'White', rgb: [255, 255, 255] };
-const R = { id: 'RED', name: 'Red', rgb: [240, 20, 20] };
-const P = { id: 'PINK', name: 'Pink', rgb: [245, 120, 130] };
-const B = { id: 'BLUE', name: 'Blue', rgb: [20, 20, 240] };
-const K = { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] };
+const W = { id: 'H01', hex: '#FFFFFF', rgb: [255, 255, 255] };
+const R = { id: 'H05', hex: '#FF0000', rgb: [240, 20, 20] };
+const P = { id: 'H06', hex: '#FF80A0', rgb: [245, 120, 130] };
+const B = { id: 'H09', hex: '#0000FF', rgb: [20, 20, 240] };
+const K = { id: 'H18', hex: '#000000', rgb: [0, 0, 0] };
 
 {
   const grid = [
@@ -20,12 +20,13 @@ const K = { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] };
     [W, W, W, W],
   ];
   const result = autoRemoveBorderBackground(grid);
-  assert.equal(result.backgroundId, 'WHITE');
+  assert.equal(result.backgroundHex, '#FFFFFF');
+  assert.equal(result.backgroundId, undefined, 'legacy background id should not be returned');
   assert.equal(result.removedCount, 13);
-  assert.equal(result.grid[1][1].id, 'RED');
+  assert.equal(result.grid[1][1].hex, '#FF0000');
   assert.equal(result.grid[2][2], null, 'background connected to border should be removed');
-  assert.deepEqual(result.counts, { RED: 3 });
-  assert.equal(grid[0][0].id, 'WHITE', 'source grid must not be mutated');
+  assert.deepEqual(result.counts, { '#FF0000': 3 });
+  assert.equal(grid[0][0].hex, '#FFFFFF', 'source grid must not be mutated');
 }
 
 {
@@ -38,26 +39,27 @@ const K = { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] };
   ];
   const result = autoRemoveBorderBackground(grid);
   assert.equal(result.removedCount, 16);
-  assert.equal(result.grid[2][2].id, 'WHITE', 'enclosed same-color detail should be preserved');
-  assert.deepEqual(result.counts, { RED: 8, WHITE: 1 });
+  assert.equal(result.grid[2][2].hex, '#FFFFFF', 'enclosed same-color detail should be preserved');
+  assert.deepEqual(result.counts, { '#FF0000': 8, '#FFFFFF': 1 });
 }
 
 {
   const grid = [[R, R, P], [B, P, B], [null, K, K]];
-  assert.deepEqual(countGridColors(grid), { RED: 2, PINK: 2, BLUE: 2, BLACK: 2 });
-  const result = excludeAndRemapColor(grid, 'PINK');
+  assert.deepEqual(countGridColors(grid), { '#FF0000': 2, '#FF80A0': 2, '#0000FF': 2, '#000000': 2 });
+  const result = excludeAndRemapColor(grid, '#FF80A0');
   assert.equal(result.blocked, false);
-  assert.equal(result.replacementId, 'RED');
+  assert.equal(result.replacementHex, '#FF0000');
+  assert.equal(result.replacementId, undefined, 'legacy replacement id should not be returned');
   assert.equal(result.remappedCount, 2);
-  assert.equal(result.counts.PINK || 0, 0);
-  assert.deepEqual(result.counts, { RED: 4, BLUE: 2, BLACK: 2 });
+  assert.equal(result.counts['#FF80A0'] || 0, 0);
+  assert.deepEqual(result.counts, { '#FF0000': 4, '#0000FF': 2, '#000000': 2 });
 }
 
 {
   const grid = [[P, P]];
-  const result = excludeAndRemapColor(grid, 'PINK', new Set(['PINK']));
+  const result = excludeAndRemapColor(grid, '#FF80A0', new Set(['#FF80A0']));
   assert.equal(result.blocked, true);
-  assert.deepEqual(result.counts, { PINK: 2 });
+  assert.deepEqual(result.counts, { '#FF80A0': 2 });
 }
 
 {
@@ -73,9 +75,14 @@ const K = { id: 'BLACK', name: 'Black', rgb: [0, 0, 0] };
 }
 
 {
+  const legacyOnly = { id: 'H01', rgb: [1, 2, 3] };
+  assert.deepEqual(countGridColors([[legacyOnly]]), {}, 'legacy id-only cells should not be counted');
+}
+
+{
   assert.deepEqual(cloneGrid(null), []);
   assert.deepEqual(countGridColors(null), {});
-  const result = excludeAndRemapColor(null, 'PINK');
+  const result = excludeAndRemapColor(null, '#FF80A0');
   assert.deepEqual(result.grid, []);
   assert.deepEqual(result.counts, {});
   assert.equal(result.blocked, false);

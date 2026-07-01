@@ -1,13 +1,13 @@
 # 拼豆图纸生成器
 
-一个浏览器端拼豆图纸生成工具。上传图片后，应用会把图片转换为指定品牌色表的拼豆网格，生成带颜色编号的图纸、豆子用量清单，并支持 PNG、CSV 和打印导出。
+一个浏览器端拼豆图纸生成工具。上传图片后，应用会把图片转换为拼豆网格，按统一色号系统标注每格豆子编号，生成图纸、豆子用量清单，并支持 PNG、CSV 和打印导出。
 
 ## 功能特性
 
 - 图片上传：支持拖拽、文件选择、剪贴板粘贴。
 - 网格尺寸：支持自定义宽高和 `29×29`、`58×58`、`87×87`、`116×116` 预设。
-- 品牌色表：内置 Hama、Perler、Artkal C。
-- 颜色匹配：使用 CIEDE2000 感知色差匹配品牌色表。
+- 色号系统：支持 MARD / COCO / 漫漫 / 盼盼 / 咪小窝 统一色号显示。
+- 颜色匹配：使用 CIEDE2000 感知色差匹配统一色表。
 - 图纸生成：Canvas 渲染彩色拼豆网格，支持品牌编号显示。
 - 线稿优化：按格子区域采样，并保护黑色轮廓，减少插画线稿失真。
 - 保真度控制：低/中保真度会清理孤立噪点，高保真度保留更多细节。
@@ -27,23 +27,31 @@ perler-beads/
 │   ├── worker.js                  # Web Worker，执行颜色匹配
 │   ├── image-processing.js        # 分块采样、线稿保护、噪点清理
 │   ├── ciede2000.js               # CIEDE2000 色差算法
+│   ├── color-matching.js          # 颜色匹配评分引擎
+│   ├── color-systems.js           # 统一色号系统：映射加载、校验、编码查询
 │   ├── renderer.js                # Canvas 图纸渲染
 │   ├── exporter.js                # PNG / CSV / 打印导出
-│   └── reducer.js                 # 聚类与减色工具函数
+│   ├── reducer.js                 # 聚类与减色工具函数
+│   └── grid-operations.js         # 去背景、颜色排除、重映射
 ├── palettes/
-│   ├── hama.json
-│   ├── perler.json
-│   └── artkal_c.json
+│   └── color-system-mapping.json  # 统一色号映射表（hex → MARD/COCO/漫漫/盼盼/咪小窝）
 ├── backend/
 │   ├── main.py                    # FastAPI 应用，托管静态文件
 │   ├── requirements.txt
 │   └── routers/ai.py              # 预留 AI 接口
 ├── scripts/
 │   ├── check-layout.js            # 基础布局检查
+│   ├── check-sampling-resolution.mjs
+│   ├── test-color-matching.mjs    # 颜色匹配行为测试
+│   ├── test-color-systems.mjs     # 色号系统映射和验证测试
+│   ├── test-exporter.mjs          # CSV 导出格式测试
+│   ├── test-grid-operations.mjs   # 网格操作测试
 │   └── test-image-processing.mjs  # 图像处理行为测试
 ├── Dockerfile
 ├── docker-compose.yml             # 服务器部署，含 Watchtower 自动更新
 ├── docker-compose.local.yml       # 本地源码构建测试
+├── LICENSE                        # AGPL-3.0
+├── NOTICE                         # 数据来源与版权声明
 ├── DEPLOY.md                      # 详细部署说明
 └── .github/workflows/deploy.yml   # GitHub Actions 构建并推送 GHCR 镜像
 ```
@@ -182,6 +190,7 @@ git push
 - `/api/ai/remove-bg` 和 `/api/ai/reduce-colors` 是 Phase 2 预留接口，目前返回占位结果。
 - 拼豆生成主要在浏览器端完成，超大网格会增加浏览器计算和渲染压力。
 
-## License
+此项目基于 [Zippland/perler-beads](https://github.com/Zippland/perler-beads) 项目的色号映射数据，遵循 **GNU Affero General Public License v3.0 (AGPL-3.0)** 开源。
 
-未指定。
+作为网络服务运行本项目的修改版本时，需要向用户提供对应的完整源代码。
+详细条款见 [LICENSE](LICENSE)，数据来源声明见 [NOTICE](NOTICE)。。

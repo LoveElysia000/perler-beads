@@ -1,41 +1,37 @@
 import assert from 'node:assert/strict';
 import { formatShoppingListCSV } from '../js/exporter.js';
 
-const counts = { BLUE: 2, RED: 9, WHITE: 4, GREEN: 1 };
-const palette = {
-  colors: [
-    { id: 'RED', name: 'Bright "Warm", Red' },
-    { id: 'WHITE', name: 'Snow\nWhite' },
-    { id: 'BLUE', name: 'Blue' },
-    { id: 'GREEN', name: 'Forest\rGreen' },
-  ],
+const mapping = {
+  '#FF0000': { MARD: 'A01', COCO: 'C01', '漫漫': '红1', '盼盼': '11', '咪小窝': '21' },
+  '#FFFFFF': { MARD: 'H02', COCO: 'A01', '漫漫': 'F2', '盼盼': '1', '咪小窝': '1' },
+  '#0000FF': { MARD: 'C01', COCO: 'H01', '漫漫': '蓝1', '盼盼': '31', '咪小窝': '41' },
 };
 
+const counts = { '#0000FF': 2, '#FF0000': 9, '#FFFFFF': 4, '#123456': 1 };
 const expected = [
-  '编号,颜色名,数量',
-  'RED,"Bright ""Warm"", Red",9',
-  'WHITE,"Snow\nWhite",4',
-  'BLUE,Blue,2',
-  'GREEN,"Forest\rGreen",1',
+  'code,hex,count',
+  'A01,#FF0000,9',
+  'H02,#FFFFFF,4',
+  'C01,#0000FF,2',
+  '?,#123456,1',
 ].join('\n');
 
-const actual = formatShoppingListCSV(counts, palette).replace(/^\uFEFF/, '');
+const actual = formatShoppingListCSV(counts, 'MARD', mapping).replace(/^\uFEFF/, '');
 assert.equal(actual, expected);
 
-const missingCounts = { NULL_COUNT: null, UNDEFINED_COUNT: undefined };
-const missingPalette = {
-  colors: [
-    { id: 'NULL_COUNT', name: 'Null Count' },
-    { id: 'UNDEFINED_COUNT', name: 'Undefined Count' },
-  ],
+const escapedMapping = {
+  '#ABCDEF': { MARD: 'A,"1"', COCO: 'C01', '漫漫': 'M01', '盼盼': 'P01', '咪小窝': 'X01' },
 };
-
-assert.doesNotThrow(() => formatShoppingListCSV(missingCounts, missingPalette));
 assert.equal(
-  formatShoppingListCSV(missingCounts, missingPalette).replace(/^\uFEFF/, ''),
-  [
-    '编号,颜色名,数量',
-    'NULL_COUNT,Null Count,',
-    'UNDEFINED_COUNT,Undefined Count,',
-  ].join('\n')
+  formatShoppingListCSV({ '#ABCDEF': 3 }, 'MARD', escapedMapping).replace(/^\uFEFF/, ''),
+  ['code,hex,count', '"A,""1""",#ABCDEF,3'].join('\n')
 );
+
+const legacyCounts = { H01: 3 };
+assert.equal(
+  formatShoppingListCSV(legacyCounts, 'MARD', mapping).replace(/^\uFEFF/, ''),
+  ['code,hex,count', '?,H01,3'].join('\n'),
+  'legacy id keys should not be treated as mapped color codes'
+);
+
+console.log('exporter tests passed');
