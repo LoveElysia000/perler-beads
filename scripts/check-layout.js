@@ -55,6 +55,14 @@ const checks = [
     name: 'legacy brand recommendation UI is removed from main flow',
     pass: !/id="brandRecommend"/.test(html) && !/showBrandRecommendation/.test(app),
   },
+  {
+    name: 'manual refinement controls exist',
+    pass: /id="paintModeBtn"/.test(html) && /id="eraseModeBtn"/.test(html) && /id="floodEraseModeBtn"/.test(html) && /id="replaceColorBtn"/.test(html),
+  },
+  {
+    name: 'selected edit color label is present',
+    pass: /id="selectedEditColorLabel"/.test(html),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);

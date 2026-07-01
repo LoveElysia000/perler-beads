@@ -1,5 +1,6 @@
 // Main application logic
 import { autoRemoveBorderBackground, cloneGrid, excludeAndRemapColor } from './grid-operations.js';
+import { paintCell, eraseCell, floodEraseColor, replaceColor } from './grid-editing.js';
 import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
 import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
@@ -17,7 +18,9 @@ let unifiedPalette = [];
 let gridActionSnapshot = null;
 let excludedColorHexes = new Set();
 let pendingExcludedColorHexes = null;
-
+let editMode = null;            // null | 'paint' | 'erase' | 'floodErase'
+let selectedEditColor = null;   // { hex, rgb }
+let editUndoStack = [];
 // ── DOM ──
 const $ = (id) => document.getElementById(id);
 
@@ -32,6 +35,115 @@ function setStatus(text, isError = false) {
 
 function clearStatus() {
   $('statusMessage')?.classList.add('hidden');
+}
+
+// ── Edit Mode Helpers ──
+const editModeButtonByMode = {
+  paint: 'paintModeBtn',
+  erase: 'eraseModeBtn',
+  floodErase: 'floodEraseModeBtn',
+};
+
+function setUndoButtonEnabled() {
+  $('undoGridActionBtn').disabled = editUndoStack.length === 0 && !gridActionSnapshot;
+}
+
+function setEditMode(mode) {
+  editMode = editMode === mode ? null : mode;
+  Object.entries(editModeButtonByMode).forEach(([buttonMode, id]) => {
+    const btn = $(id);
+    if (!btn) return;
+    const active = editMode === buttonMode;
+    btn.classList.toggle('!bg-primary', active);
+    btn.classList.toggle('!text-on-primary', active);
+  });
+}
+
+function pushEditUndoSnapshot() {
+  if (!currentGrid) return;
+  editUndoStack.push({ grid: cloneGrid(currentGrid.grid), counts: { ...currentGrid.counts } });
+  if (editUndoStack.length > 30) editUndoStack.shift();
+  setUndoButtonEnabled();
+}
+
+function updateSelectedEditColor(cell) {
+  selectedEditColor = cell;
+  const label = $('selectedEditColorLabel');
+  if (label) label.textContent = cell ? `已选: ${getColorCode(cell.hex, currentColorSystem, colorMapping)}` : '点击清单选择颜色';
+}
+
+function eventToGridCell(event) {
+  if (!currentGrid) return null;
+  const canvas = $('patternCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((event.clientX - rect.left) * canvas.width / rect.width);
+  const y = Math.floor((event.clientY - rect.top) * canvas.height / rect.height);
+  const gridH = currentGrid.grid.length;
+  const gridW = currentGrid.grid[0].length;
+  const col = Math.floor(x / (canvas.width / gridW));
+  const row = Math.floor(y / (canvas.height / gridH));
+  if (row < 0 || row >= gridH || col < 0 || col >= gridW) return null;
+  return { row, col };
+}
+
+function undoLastGridChange() {
+  const editSnapshot = editUndoStack.pop();
+  if (editSnapshot) {
+    currentGrid = { grid: cloneGrid(editSnapshot.grid), counts: { ...editSnapshot.counts } };
+    renderFromGrid();
+    updateCountsList();
+    setUndoButtonEnabled();
+    return;
+  }
+  restoreGridActionSnapshot();
+  setUndoButtonEnabled();
+}
+
+function replaceSelectedHighlightColor() {
+  if (!currentGrid || !highlightHex) {
+    alert('请先在豆子清单中点击要替换的源颜色。');
+    return;
+  }
+  const code = getColorCode(highlightHex, currentColorSystem, colorMapping);
+  const targetCode = prompt(`将 ${code} (${highlightHex}) 全部替换为哪个色号？`);
+  if (!targetCode) return;
+
+  // Find target hex from code
+  let targetHex = null;
+  for (const row of currentGrid.grid) {
+    for (const cell of row) {
+      if (cell?.hex && getColorCode(cell.hex, currentColorSystem, colorMapping) === targetCode.trim()) {
+        targetHex = cell.hex;
+        break;
+      }
+    }
+    if (targetHex) break;
+  }
+  if (!targetHex) {
+    // Try as raw hex
+    if (/^#[0-9A-F]{6}$/i.test(targetCode.trim())) {
+      targetHex = targetCode.trim().toUpperCase();
+    } else {
+      alert(`未找到色号 ${targetCode}。请确认该颜色在网格中存在，或输入完整 hex (#RRGGBB)。`);
+      return;
+    }
+  }
+  if (highlightHex === targetHex) return;
+
+  const targetCell = { hex: targetHex, rgb: (currentGrid.grid.flat().find(c => c?.hex === targetHex)?.rgb) || [128, 128, 128] };
+
+  pushEditUndoSnapshot();
+  const result = replaceColor(currentGrid.grid, highlightHex, targetCell);
+  if (!result.changed) {
+    editUndoStack.pop();
+    setUndoButtonEnabled();
+    return;
+  }
+  currentGrid = { grid: result.grid, counts: result.counts };
+  highlightHex = targetHex;
+  updateSelectedEditColor(targetCell);
+  renderFromGrid();
+  updateCountsList();
 }
 
 // ── Worker Init ──
@@ -204,6 +316,7 @@ function saveGridActionSnapshot() {
     counts: { ...currentGrid.counts },
     excludedColorHexes: new Set(excludedColorHexes),
   };
+  editUndoStack = [];
   $('undoGridActionBtn').disabled = false;
 }
 
@@ -316,7 +429,18 @@ function updateCountsList() {
       if (event.target.closest('.exclude-color-btn')) return;
       $('countsList').querySelectorAll('li').forEach(l => l.classList.remove('highlighted'));
       highlightHex = highlightHex === li.dataset.hex ? null : li.dataset.hex;
-      if (highlightHex) li.classList.add('highlighted');
+      if (highlightHex) {
+        li.classList.add('highlighted');
+        const hex = li.dataset.hex;
+        const hexToRgbMap = new Map();
+        for (const gridRow of currentGrid.grid) {
+          for (const cell of gridRow) {
+            if (cell?.hex && cell.rgb && !hexToRgbMap.has(cell.hex)) hexToRgbMap.set(cell.hex, cell.rgb);
+          }
+        }
+        const rgb = hexToRgbMap.get(hex);
+        if (rgb) updateSelectedEditColor({ hex, rgb });
+      }
       renderFromGrid();
     });
   });
@@ -440,7 +564,44 @@ $('removeBackgroundBtn').addEventListener('click', () => {
   updateCountsList();
   refreshExcludedColorsPanel();
 });
-$('undoGridActionBtn').addEventListener('click', restoreGridActionSnapshot);
+$('undoGridActionBtn').addEventListener('click', undoLastGridChange);
+
+$('paintModeBtn').addEventListener('click', () => setEditMode('paint'));
+$('eraseModeBtn').addEventListener('click', () => setEditMode('erase'));
+$('floodEraseModeBtn').addEventListener('click', () => setEditMode('floodErase'));
+$('replaceColorBtn').addEventListener('click', replaceSelectedHighlightColor);
+
+$('patternCanvas').addEventListener('click', (event) => {
+  if (!currentGrid || !editMode) return;
+  const target = eventToGridCell(event);
+  if (!target) return;
+
+  let result = null;
+  if (editMode === 'paint') {
+    if (!selectedEditColor) {
+      alert('请先从豆子清单选择一种颜色。');
+      return;
+    }
+    pushEditUndoSnapshot();
+    result = paintCell(currentGrid.grid, target.row, target.col, selectedEditColor);
+  } else if (editMode === 'erase') {
+    pushEditUndoSnapshot();
+    result = eraseCell(currentGrid.grid, target.row, target.col);
+  } else if (editMode === 'floodErase') {
+    pushEditUndoSnapshot();
+    result = floodEraseColor(currentGrid.grid, target.row, target.col);
+  }
+
+  if (!result || result.changed === false || result.erasedCount === 0) {
+    editUndoStack.pop();
+    setUndoButtonEnabled();
+    return;
+  }
+
+  currentGrid = { grid: result.grid, counts: result.counts };
+  renderFromGrid();
+  updateCountsList();
+});
 
 // ── Init ──
 initWorker();
