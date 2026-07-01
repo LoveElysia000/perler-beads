@@ -246,25 +246,21 @@
           <div class="h-px bg-outline-variant"></div>
 
           <section id="countsSection" class="hidden">
-            <div class="mb-4 flex items-center justify-between">
+            <div class="mb-4 flex items-center gap-2">
+              <span class="section-icon material-symbols-outlined text-[20px] text-primary">palette</span>
               <h3 class="text-title-md font-bold text-on-surface">豆子清单</h3>
-              <span id="colorStats" class="text-[11px] font-semibold uppercase tracking-wider text-secondary"></span>
+              <span id="colorStats" class="ml-auto text-[11px] font-semibold uppercase tracking-wider text-secondary"></span>
             </div>
             <ul id="countsList" class="custom-scrollbar max-h-[260px] space-y-1 overflow-y-auto pr-1"></ul>
           </section>
 
           <section id="exportSection" class="hidden">
-            <h3 class="mb-4 text-title-md font-bold text-on-surface">Workspace</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <button id="downloadPNGBtn" class="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">
-                <span class="material-symbols-outlined text-[18px]">image</span> PNG
-              </button>
-              <button id="downloadCSVBtn" class="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">
-                <span class="material-symbols-outlined text-[18px]">table</span> CSV
-              </button>
+            <div class="mb-4 flex items-center gap-2">
+              <span class="section-icon material-symbols-outlined text-[20px] text-primary">build</span>
+              <h3 class="text-title-md font-bold text-on-surface">Workspace</h3>
             </div>
-            <button id="printBtn" class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container-highest py-4 text-label-sm font-bold text-on-surface transition-colors hover:bg-outline-variant" type="button">
-              <span class="material-symbols-outlined">print</span> 打印图纸
+            <button id="downloadBtn" class="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-label-sm font-bold text-on-primary shadow-md transition-all hover:shadow-lg active:scale-95" type="button">
+              <span class="material-symbols-outlined text-[18px]">download</span> 下载图纸
             </button>
             <div class="mt-4 grid grid-cols-2 gap-3">
               <button id="removeBackgroundBtn" class="rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">一键去背景</button>
@@ -309,5 +305,48 @@
   </div>
 
   <script type="module" src="/js/app.js"></script>
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Download Settings Modal -->
+  <div id="downloadModal" class="hidden">
+    <div class="modal-card">
+      <h3>下载图纸</h3>
+      <div class="modal-row">
+        <span>显示编号</span>
+        <input type="checkbox" id="dlShowCodes" checked>
+      </div>
+      <div class="modal-row">
+        <span>显示网格线</span>
+        <input type="checkbox" id="dlShowGrid" checked>
+      </div>
+      <div class="modal-row">
+        <span>显示坐标</span>
+        <input type="checkbox" id="dlShowCoords" checked>
+      </div>
+      <div class="modal-row">
+        <span>29×29 分割线</span>
+        <input type="checkbox" id="dlShowSection" checked>
+      </div>
+      <div class="modal-grid">
+        <button class="modal-btn primary" id="dlPNGBtn">PNG 图片</button>
+        <button class="modal-btn secondary" id="dlCSVBtn">CSV 清单</button>
+        <button class="modal-btn secondary" id="dlPrintBtn" style="grid-column: 1/-1">打印图纸</button>
+      </div>
+      <button class="modal-btn secondary" id="dlCloseBtn" style="width:100%">关闭</button>
+    </div>
+  </div>
+
+  <!-- Floating Edit Toolbar -->
+  <div id="floatingEditToolbar" class="hidden">
+    <button id="floatPaintBtn" title="上色">🎨</button>
+    <button id="floatEraseBtn" title="擦除">🧹</button>
+    <button id="floatFloodEraseBtn" title="区域擦除">💧</button>
+    <div class="toolbar-divider"></div>
+    <button id="floatReplaceBtn" title="替换颜色">🔄</button>
+    <div class="toolbar-divider"></div>
+    <button id="floatExitEditBtn" title="退出编辑">✕</button>
+  </div>
 </body>
 </html>

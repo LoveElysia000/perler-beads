@@ -67,6 +67,30 @@ const checks = [
     name: 'guided building controls exist',
     pass: /id="setBuildColorBtn"/.test(html) && /id="recommendRegionBtn"/.test(html) && /id="markRegionDoneBtn"/.test(html) && /id="buildStrategy"/.test(html) && /id="buildProgressLabel"/.test(html),
   },
+  {
+    name: 'toast container present',
+    pass: /id="toastContainer"/.test(html),
+  },
+  {
+    name: 'download modal with options present',
+    pass: /id="downloadModal"/.test(html) && /id="dlShowCodes"/.test(html) && /id="dlPNGBtn"/.test(html) && /id="dlCSVBtn"/.test(html) && /id="dlPrintBtn"/.test(html),
+  },
+  {
+    name: 'single download button replaces PNG/CSV/Print',
+    pass: /id="downloadBtn"/.test(html) && !/id="downloadPNGBtn"/.test(html) && !/id="downloadCSVBtn"/.test(html) && !/id="printBtn"/.test(html),
+  },
+  {
+    name: 'floating edit toolbar present',
+    pass: /id="floatingEditToolbar"/.test(html) && /id="floatPaintBtn"/.test(html),
+  },
+  {
+    name: 'no alert() calls in app.js',
+    pass: !/\.alert\(/.test(app),
+  },
+  {
+    name: 'showToast used for user feedback',
+    pass: /\bshowToast\(/.test(app),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);

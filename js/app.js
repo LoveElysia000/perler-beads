@@ -42,6 +42,16 @@ function clearStatus() {
   $('statusMessage')?.classList.add('hidden');
 }
 
+function showToast(message, type = '') {
+  const container = $('toastContainer');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
 // ── Helpers ──
 function buildHexToRgbMap() {
   const map = new Map();
@@ -117,7 +127,7 @@ function undoLastGridChange() {
 
 function replaceSelectedHighlightColor() {
   if (!currentGrid || !highlightHex) {
-    alert('请先在豆子清单中点击要替换的源颜色。');
+    showToast('请先在豆子清单中点击要替换的源颜色。', 'warn');
     return;
   }
   const code = getColorCode(highlightHex, currentColorSystem, colorMapping);
@@ -140,7 +150,7 @@ function replaceSelectedHighlightColor() {
     if (/^#[0-9A-F]{6}$/i.test(targetCode.trim())) {
       targetHex = targetCode.trim().toUpperCase();
     } else {
-      alert(`未找到色号 ${targetCode}。请确认该颜色在网格中存在，或输入完整 hex (#RRGGBB)。`);
+      showToast(`未找到色号 ${targetCode}。`, 'warn');
       return;
     }
   }
@@ -173,7 +183,7 @@ function resetBuildState() {
 
 function setHighlightedColorAsBuildColor() {
   if (!highlightHex) {
-    alert('请先点击豆子清单选择一个颜色。');
+    showToast('请先点击豆子清单选择一个颜色。', 'warn');
     return;
   }
   selectedBuildColor = highlightHex;
@@ -185,7 +195,7 @@ function setHighlightedColorAsBuildColor() {
 
 function recommendNextRegion() {
   if (!currentGrid || !selectedBuildColor) {
-    alert('请先在豆子清单中选择制作引导颜色。');
+    showToast('请先在豆子清单中选择制作引导颜色。', 'warn');
     return;
   }
   const regions = getAllConnectedRegions(currentGrid.grid, selectedBuildColor)
@@ -463,7 +473,7 @@ function applyPendingColorExclusions(gridResult) {
   excludedColorHexes = new Set([...applied, ...blockedExcludedColorHexes]);
   pendingExcludedColorHexes = null;
   if (blockedExcludedColorHexes.length > 0) {
-    alert(`无法继续排除 ${blockedExcludedColorHexes.map(h => getColorCode(h, currentColorSystem, colorMapping)).join(', ')}，因为没有可替代颜色。`);
+    showToast(`无法继续排除 ${blockedExcludedColorHexes.map(h => getColorCode(h, currentColorSystem, colorMapping)).join(', ')}，因为没有可替代颜色。`, 'warn');
   }
   return { grid: nextGrid, counts: nextCounts };
 }
@@ -515,7 +525,7 @@ function updateCountsList() {
       const result = excludeAndRemapColor(currentGrid.grid, hex, allowedHexes);
       if (result.blocked) {
         restoreGridActionSnapshot();
-        alert(`无法排除 ${getColorCode(hex, currentColorSystem, colorMapping)}，因为没有可替代颜色。`);
+          showToast(`无法排除 ${getColorCode(hex, currentColorSystem, colorMapping)}，因为没有可替代颜色。`, 'warn');
         return;
       }
       excludedColorHexes.add(hex);
@@ -605,20 +615,81 @@ $('viewCode').addEventListener('click', () => {
 $('zoomInBtn').addEventListener('click', () => { zoomLevel = Math.min(4, zoomLevel + 0.25); renderFromGrid(); });
 $('zoomOutBtn').addEventListener('click', () => { zoomLevel = Math.max(0.25, zoomLevel - 0.25); renderFromGrid(); });
 
-$('downloadPNGBtn').addEventListener('click', () => downloadPNG($('patternCanvas')));
-$('downloadCSVBtn').addEventListener('click', () => {
+// ── Download Modal ──
+$('downloadBtn').addEventListener('click', () => {
+  if (!currentGrid) return;
+  $('downloadModal').classList.remove('hidden');
+});
+$('dlCloseBtn').addEventListener('click', () => $('downloadModal').classList.add('hidden'));
+$('downloadModal').addEventListener('click', (e) => {
+  if (e.target === $('downloadModal')) $('downloadModal').classList.add('hidden');
+});
+$('dlPNGBtn').addEventListener('click', () => {
+  $('downloadModal').classList.add('hidden');
+  downloadPNG($('patternCanvas'));
+});
+$('dlCSVBtn').addEventListener('click', () => {
+  $('downloadModal').classList.add('hidden');
   if (currentGrid) downloadCSV(currentGrid.counts, currentColorSystem, colorMapping);
 });
-$('printBtn').addEventListener('click', () => {
+$('dlPrintBtn').addEventListener('click', () => {
+  $('downloadModal').classList.add('hidden');
   if (currentGrid) printPattern($('patternCanvas'), currentGrid.grid[0].length, currentGrid.grid.length);
 });
+
+// ── Floating Edit Toolbar ──
+function toggleFloatingToolbar(show) {
+  const toolbar = $('floatingEditToolbar');
+  if (!toolbar) return;
+  toolbar.classList.toggle('hidden', !show);
+  // Sync panel buttons with toolbar
+  if (show) {
+    if (editMode) {
+      const activeBtnId = { paint: 'floatPaintBtn', erase: 'floatEraseBtn', floodErase: 'floatFloodEraseBtn' }[editMode];
+      toolbar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.id === activeBtnId));
+    }
+  }
+}
+
+function exitEditMode() {
+  editMode = null;
+  toggleFloatingToolbar(false);
+  // Reset panel edit buttons
+  Object.values(editModeButtonByMode).forEach(id => {
+    const btn = $(id);
+    if (btn) { btn.classList.remove('!bg-primary', '!text-on-primary'); }
+  });
+}
+
+$('floatPaintBtn').addEventListener('click', () => { setEditMode('paint'); syncFloatActive(); });
+$('floatEraseBtn').addEventListener('click', () => { setEditMode('erase'); syncFloatActive(); });
+$('floatFloodEraseBtn').addEventListener('click', () => { setEditMode('floodErase'); syncFloatActive(); });
+$('floatReplaceBtn').addEventListener('click', () => replaceSelectedHighlightColor());
+$('floatExitEditBtn').addEventListener('click', () => exitEditMode());
+
+function syncFloatActive() {
+  const toolbar = $('floatingEditToolbar');
+  if (!toolbar) return;
+  toolbar.querySelectorAll('button').forEach(b => {
+    const mode = { floatPaintBtn: 'paint', floatEraseBtn: 'erase', floatFloodEraseBtn: 'floodErase' }[b.id];
+    b.classList.toggle('active', mode === editMode);
+  });
+}
+
+// Show floating toolbar when entering edit mode from panel
+const origSetEditMode = setEditMode;
+setEditMode = function(mode) {
+  origSetEditMode(mode);
+  toggleFloatingToolbar(!!editMode);
+};
+
 $('removeBackgroundBtn').addEventListener('click', () => {
   if (!currentGrid) return;
   saveGridActionSnapshot();
   const result = autoRemoveBorderBackground(currentGrid.grid);
   if (result.removedCount === 0) {
     restoreGridActionSnapshot();
-    alert('未找到可去除的连通背景。');
+    showToast('未找到可去除的连通背景。', 'warn');
     return;
   }
   currentGrid = { grid: result.grid, counts: result.counts };
@@ -642,7 +713,7 @@ $('patternCanvas').addEventListener('click', (event) => {
   let result = null;
   if (editMode === 'paint') {
     if (!selectedEditColor) {
-      alert('请先从豆子清单选择一种颜色。');
+      showToast('请先从豆子清单选择一种颜色。', 'warn');
       return;
     }
     pushEditUndoSnapshot();
