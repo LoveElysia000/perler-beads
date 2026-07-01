@@ -12,6 +12,8 @@ export function renderPattern(canvas, grid, options = {}) {
     cellSize = DEFAULT_CELL_SIZE,
     colorSystem = 'MARD',
     colorMapping = {},
+    buildRegion = null,
+    completedCells = null,
   } = options;
 
   const h = grid.length, w = grid[0].length;
@@ -50,9 +52,22 @@ export function renderPattern(canvas, grid, options = {}) {
         }
       }
 
+      if (completedCells?.has(`${y},${x}`)) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        ctx.fillRect(px, py, cellSize, cellSize);
+      }
+
       ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 0.5;
       ctx.strokeRect(px, py, cellSize, cellSize);
+    }
+  }
+
+  if (buildRegion?.length) {
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = Math.max(2, cellSize * 0.12);
+    for (const { row, col } of buildRegion) {
+      ctx.strokeRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
     }
   }
 

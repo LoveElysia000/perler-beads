@@ -1,6 +1,7 @@
 // Main application logic
 import { autoRemoveBorderBackground, cloneGrid, excludeAndRemapColor } from './grid-operations.js';
 import { paintCell, eraseCell, floodEraseColor, replaceColor } from './grid-editing.js';
+import { getAllConnectedRegions, isRegionCompleted, sortRegions, cellKey } from './regions.js';
 import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
 import { buildPaletteFromMapping, validateColorSystemMapping, getColorCode, getColorEntry, hexToRgb, COLOR_SYSTEMS, DEFAULT_COLOR_SYSTEM } from './color-systems.js';
@@ -21,6 +22,10 @@ let pendingExcludedColorHexes = null;
 let editMode = null;            // null | 'paint' | 'erase' | 'floodErase'
 let selectedEditColor = null;   // { hex, rgb }
 let editUndoStack = [];
+let selectedBuildColor = null;   // hex
+let currentBuildRegion = null;
+let completedBuildCells = new Set();
+let lastBuildReference = { row: 0, col: 0 };
 // ── DOM ──
 const $ = (id) => document.getElementById(id);
 
@@ -151,10 +156,65 @@ function replaceSelectedHighlightColor() {
     return;
   }
   currentGrid = { grid: result.grid, counts: result.counts };
+  resetBuildState();
   highlightHex = targetHex;
   updateSelectedEditColor(targetCell);
   renderFromGrid();
   updateCountsList();
+}
+
+// ── Build Guide Functions ──
+function resetBuildState() {
+  selectedBuildColor = null;
+  currentBuildRegion = null;
+  completedBuildCells = new Set();
+  $('buildProgressLabel').textContent = '未开始';
+}
+
+function setHighlightedColorAsBuildColor() {
+  if (!highlightHex) {
+    alert('请先点击豆子清单选择一个颜色。');
+    return;
+  }
+  selectedBuildColor = highlightHex;
+  currentBuildRegion = null;
+  const code = getColorCode(highlightHex, currentColorSystem, colorMapping);
+  $('buildProgressLabel').textContent = `制作颜色 ${code}`;
+  renderFromGrid();
+}
+
+function recommendNextRegion() {
+  if (!currentGrid || !selectedBuildColor) {
+    alert('请先在豆子清单中选择制作引导颜色。');
+    return;
+  }
+  const regions = getAllConnectedRegions(currentGrid.grid, selectedBuildColor)
+    .filter((region) => !isRegionCompleted(region, completedBuildCells));
+  if (regions.length === 0) {
+    currentBuildRegion = null;
+    $('buildProgressLabel').textContent = '该颜色已完成';
+    renderFromGrid();
+    return;
+  }
+  const strategy = $('buildStrategy').value;
+  const sorted = sortRegions(regions, strategy, lastBuildReference, {
+    rows: currentGrid.grid.length,
+    cols: currentGrid.grid[0].length,
+  });
+  currentBuildRegion = sorted[0];
+  $('buildProgressLabel').textContent = `推荐 ${currentBuildRegion.length} 颗`;
+  renderFromGrid();
+}
+
+function markCurrentRegionDone() {
+  if (!currentBuildRegion) return;
+  for (const { row, col } of currentBuildRegion) {
+    completedBuildCells.add(cellKey(row, col));
+  }
+  lastBuildReference = currentBuildRegion[currentBuildRegion.length - 1] || lastBuildReference;
+  currentBuildRegion = null;
+  $('buildProgressLabel').textContent = `已完成 ${completedBuildCells.size} 颗`;
+  renderFromGrid();
 }
 
 // ── Worker Init ──
@@ -193,6 +253,7 @@ function handleWorkerMessage(e) {
     console.log('Worker ready with unified color system palette');
   } else if (type === 'result') {
     currentGrid = applyPendingColorExclusions(payload);
+    resetBuildState();
     renderFromGrid();
     updateCountsList();
     refreshExcludedColorsPanel();
@@ -317,6 +378,8 @@ function renderFromGrid() {
     cellSize,
     colorSystem: currentColorSystem,
     colorMapping,
+    buildRegion: currentBuildRegion,
+    completedCells: completedBuildCells,
   });
 }
 
@@ -457,6 +520,7 @@ function updateCountsList() {
       }
       excludedColorHexes.add(hex);
       currentGrid = { grid: result.grid, counts: result.counts };
+      resetBuildState();
       if (highlightHex === hex) highlightHex = null;
       renderFromGrid();
       updateCountsList();
@@ -558,6 +622,7 @@ $('removeBackgroundBtn').addEventListener('click', () => {
     return;
   }
   currentGrid = { grid: result.grid, counts: result.counts };
+  resetBuildState();
   renderFromGrid();
   updateCountsList();
   refreshExcludedColorsPanel();
@@ -597,9 +662,14 @@ $('patternCanvas').addEventListener('click', (event) => {
   }
 
   currentGrid = { grid: result.grid, counts: result.counts };
+  resetBuildState();
   renderFromGrid();
   updateCountsList();
 });
+
+$('setBuildColorBtn').addEventListener('click', setHighlightedColorAsBuildColor);
+$('recommendRegionBtn').addEventListener('click', recommendNextRegion);
+$('markRegionDoneBtn').addEventListener('click', markCurrentRegionDone);
 
 // ── Init ──
 initWorker();

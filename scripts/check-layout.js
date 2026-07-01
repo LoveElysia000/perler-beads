@@ -63,6 +63,10 @@ const checks = [
     name: 'selected edit color label is present',
     pass: /id="selectedEditColorLabel"/.test(html),
   },
+  {
+    name: 'guided building controls exist',
+    pass: /id="setBuildColorBtn"/.test(html) && /id="recommendRegionBtn"/.test(html) && /id="markRegionDoneBtn"/.test(html) && /id="buildStrategy"/.test(html) && /id="buildProgressLabel"/.test(html),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);
