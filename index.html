@@ -264,6 +264,14 @@
             <button id="printBtn" class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container-highest py-4 text-label-sm font-bold text-on-surface transition-colors hover:bg-outline-variant" type="button">
               <span class="material-symbols-outlined">print</span> 打印图纸
             </button>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <button id="removeBackgroundBtn" class="rounded-lg border border-outline-variant py-3 text-label-sm font-semibold transition-colors hover:bg-surface-container-low" type="button">一键去背景</button>
+              <button id="undoGridActionBtn" disabled class="rounded-lg border border-outline-variant py-3 text-label-sm font-semibold text-secondary transition-colors hover:bg-surface-container-low disabled:opacity-50" type="button">撤销</button>
+            </div>
+            <div id="excludedColorsPanel" class="mt-3 hidden rounded-lg border border-outline-variant bg-surface-container-lowest p-3">
+              <div class="mb-2 text-[11px] font-bold text-on-surface-variant">已排除颜色</div>
+              <ul id="excludedColorsList" class="space-y-1 text-xs text-secondary"></ul>
+            </div>
           </section>
         </div>
       </aside>

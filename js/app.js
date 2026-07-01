@@ -1,4 +1,5 @@
 // Main application logic
+import { autoRemoveBorderBackground, cloneGrid, excludeAndRemapColor } from './grid-operations.js';
 import { renderPattern, computeCellSize } from './renderer.js';
 import { downloadPNG, downloadCSV, printPattern } from './exporter.js';
 
@@ -11,6 +12,9 @@ let highlightColor = null;
 let showCodes = true;
 let zoomLevel = 1;
 let paletteCache = {};
+let gridActionSnapshot = null;
+let excludedColorIds = new Set();
+let pendingExcludedColorIds = null;
 
 // ── DOM ──
 const $ = (id) => document.getElementById(id);
@@ -34,9 +38,10 @@ function handleWorkerMessage(e) {
   if (type === 'ready') {
     console.log('Worker ready');
   } else if (type === 'result') {
-    currentGrid = payload;
+    currentGrid = applyPendingColorExclusions(payload);
     renderFromGrid();
     updateCountsList();
+    refreshExcludedColorsPanel();
     $('exportSection').classList.remove('hidden');
     $('countsSection').classList.remove('hidden');
     $('generateBtn').disabled = false;
@@ -108,7 +113,7 @@ function prepareSourceImageData(img, targetW, targetH, mode) {
 }
 
 // ── Matching ──
-function runMatch() {
+function runMatch(options = {}) {
   if (!currentImage || !worker) return;
   const w = parseInt($('gridW').value) || 58;
   const h = parseInt($('gridH').value) || 58;
@@ -118,6 +123,11 @@ function runMatch() {
   $('previewArea').classList.remove('hidden');
   $('generateBtn').disabled = true;
   $('generateBtn').textContent = '处理中...';
+  const pendingExclusions = options.excludedColorIds || null;
+  if (pendingExclusions) {
+    pendingExcludedColorIds = new Set(pendingExclusions);
+  }
+  resetGridActionState({ preservePending: Boolean(pendingExclusions) });
 
   const processed = prepareSourceImageData(currentImage, w, h, mode);
 
@@ -165,6 +175,83 @@ function renderFromGrid() {
   });
 }
 
+function saveGridActionSnapshot() {
+  if (!currentGrid) return;
+  gridActionSnapshot = {
+    grid: cloneGrid(currentGrid.grid),
+    counts: { ...currentGrid.counts },
+    excludedColorIds: new Set(excludedColorIds),
+  };
+  $('undoGridActionBtn').disabled = false;
+}
+
+function refreshExcludedColorsPanel() {
+  const panel = $('excludedColorsPanel');
+  const list = $('excludedColorsList');
+  if (!panel || !list) return;
+  panel.classList.toggle('hidden', excludedColorIds.size === 0);
+  list.innerHTML = [...excludedColorIds].map((id) => `
+    <li class="flex items-center justify-between gap-2">
+      <span>${id}</span>
+      <button class="restore-excluded-color-btn rounded border border-outline-variant px-2 py-1" data-restore-id="${id}" type="button">恢复</button>
+    </li>`).join('');
+  list.querySelectorAll('.restore-excluded-color-btn').forEach((btn) => {
+    btn.addEventListener('click', () => restoreExcludedColor(btn.dataset.restoreId));
+  });
+}
+
+function restoreGridActionSnapshot() {
+  if (!gridActionSnapshot) return;
+  currentGrid = {
+    grid: cloneGrid(gridActionSnapshot.grid),
+    counts: { ...gridActionSnapshot.counts },
+  };
+  excludedColorIds = new Set(gridActionSnapshot.excludedColorIds);
+  gridActionSnapshot = null;
+  $('undoGridActionBtn').disabled = true;
+  renderFromGrid();
+  updateCountsList();
+  refreshExcludedColorsPanel();
+}
+
+function restoreExcludedColor(id) {
+  if (!excludedColorIds.has(id)) return;
+  const remainingExcludedColorIds = new Set(excludedColorIds);
+  remainingExcludedColorIds.delete(id);
+  excludedColorIds = remainingExcludedColorIds;
+  refreshExcludedColorsPanel();
+  if (currentImage) runMatch({ excludedColorIds: remainingExcludedColorIds });
+}
+
+function resetGridActionState(options = {}) {
+  gridActionSnapshot = null;
+  excludedColorIds = new Set();
+  if (!options.preservePending) pendingExcludedColorIds = null;
+  $('undoGridActionBtn').disabled = true;
+  refreshExcludedColorsPanel();
+}
+
+function applyPendingColorExclusions(gridResult) {
+  if (!pendingExcludedColorIds?.size) return gridResult;
+
+  let nextGrid = cloneGrid(gridResult.grid);
+  let nextCounts = { ...gridResult.counts };
+  const applied = new Set();
+
+  for (const id of pendingExcludedColorIds) {
+    const allowedIds = new Set(Object.keys(nextCounts).filter((colorId) => !pendingExcludedColorIds.has(colorId)));
+    const result = excludeAndRemapColor(nextGrid, id, allowedIds);
+    if (result.blocked) continue;
+    nextGrid = result.grid;
+    nextCounts = result.counts;
+    if (result.remappedCount > 0) applied.add(id);
+  }
+
+  excludedColorIds = applied;
+  pendingExcludedColorIds = null;
+  return { grid: nextGrid, counts: nextCounts };
+}
+
 // ── Counts List ──
 function updateCountsList() {
   if (!currentGrid) return;
@@ -186,15 +273,38 @@ function updateCountsList() {
       <span class="swatch" style="background:rgb(${r},${g},${b})"></span>
       <span class="name">${id} ${color.name}</span>
       <span class="count">×${count}</span>
+      <button class="exclude-color-btn" data-exclude-id="${id}" type="button">排除</button>
     </li>`;
   }).join('');
 
   $('countsList').querySelectorAll('li').forEach(li => {
-    li.addEventListener('click', () => {
+    li.addEventListener('click', (event) => {
+      if (event.target.closest('.exclude-color-btn')) return;
       $('countsList').querySelectorAll('li').forEach(l => l.classList.remove('highlighted'));
       highlightColor = highlightColor === li.dataset.id ? null : li.dataset.id;
       if (highlightColor) li.classList.add('highlighted');
       renderFromGrid();
+    });
+  });
+
+  $('countsList').querySelectorAll('.exclude-color-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!currentGrid) return;
+      const id = btn.dataset.excludeId;
+      saveGridActionSnapshot();
+      const allowedIds = new Set(Object.keys(currentGrid.counts).filter((colorId) => !excludedColorIds.has(colorId)));
+      const result = excludeAndRemapColor(currentGrid.grid, id, allowedIds);
+      if (result.blocked) {
+        restoreGridActionSnapshot();
+        alert(`无法排除 ${id}，因为没有可替代颜色。`);
+        return;
+      }
+      excludedColorIds.add(id);
+      currentGrid = { grid: result.grid, counts: result.counts };
+      if (highlightColor === id) highlightColor = null;
+      renderFromGrid();
+      updateCountsList();
+      refreshExcludedColorsPanel();
     });
   });
 }
@@ -295,6 +405,21 @@ $('downloadCSVBtn').addEventListener('click', () => {
 $('printBtn').addEventListener('click', () => {
   if (currentGrid) printPattern($('patternCanvas'), currentGrid.grid[0].length, currentGrid.grid.length);
 });
+$('removeBackgroundBtn').addEventListener('click', () => {
+  if (!currentGrid) return;
+  saveGridActionSnapshot();
+  const result = autoRemoveBorderBackground(currentGrid.grid);
+  if (result.removedCount === 0) {
+    restoreGridActionSnapshot();
+    alert('未找到可去除的连通背景。');
+    return;
+  }
+  currentGrid = { grid: result.grid, counts: result.counts };
+  renderFromGrid();
+  updateCountsList();
+  refreshExcludedColorsPanel();
+});
+$('undoGridActionBtn').addEventListener('click', restoreGridActionSnapshot);
 
 // ── Init ──
 initWorker();

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const html = fs.readFileSync('index.html', 'utf8');
+const app = fs.readFileSync('js/app.js', 'utf8');
 
 const checks = [
   {
@@ -17,6 +18,22 @@ const checks = [
   {
     name: 'center panel can shrink and keep its content scrollable',
     pass: /<section id="centerPanel"[^>]*class="[^"]*min-w-0/.test(html),
+  },
+  {
+    name: 'workspace exposes background removal and undo controls',
+    pass: /id="removeBackgroundBtn"/.test(html) && /id="undoGridActionBtn"/.test(html),
+  },
+  {
+    name: 'excluded colors panel has stable list target',
+    pass: /id="excludedColorsPanel"/.test(html) && /id="excludedColorsList"/.test(html),
+  },
+  {
+    name: 'counts list supports color exclusion action without breaking highlight clicks',
+    pass: /exclude-color-btn/.test(app) && /closest\('\.exclude-color-btn'\)/.test(app),
+  },
+  {
+    name: 'restoring one excluded color preserves remaining exclusions during regeneration',
+    pass: /runMatch\(\{ excludedColorIds: remainingExcludedColorIds \}\)/.test(app),
   },
 ];
 

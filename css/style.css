@@ -66,6 +66,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.exclude-color-btn {
+  margin-left: 8px;
+  border: 1px solid #c7c4d8;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #565e74;
+  background: #fff;
+}
+.exclude-color-btn:hover { background: #eff4ff; }
+
 .hidden { display: none !important; }
 
 @media print {
