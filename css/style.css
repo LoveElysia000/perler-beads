@@ -314,7 +314,4 @@
   header, #toolRail, #inspectorPanel, #floatingEditToolbar, #downloadModal, #toastContainer { display: none; }
   #centerPanel { flex: 1; overflow: visible; padding: 0; }
 }
-  body { background: #fff; }
-  header, #toolRail, #inspectorPanel { display: none; }
-  #centerPanel { flex: 1; overflow: visible; padding: 0; }
 }
